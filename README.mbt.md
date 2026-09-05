@@ -59,6 +59,8 @@ pub fn page(path : String) -> Unit { @engine.page(path) }
 
 ```bash
 moon build --target js --release   # 产出 _build/js/release/build/engine-export/engine-export.js
+node scripts/minify.cjs _build/js/release/build/engine-export/engine-export.js
+# 233 KB → 134 KB（terser），小程序主包 2MB 限额下更从容
 ```
 
 ### 3. 小程序侧：每文件一行装配
