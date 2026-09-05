@@ -11,10 +11,10 @@
 
 ```bash
 moon check                            # 类型检查（0 error 才算过）
-moon test                             # 全部单测（37 个，含 2 个 quickcheck 属性测试）
+moon test                             # 全部单测（24 个，js 目标）
 moon fmt                              # 提交前必须跑
 moon info                             # 确认 .mbti 变更是有意的
-powershell scripts/build-example.ps1  # 构建 + 无头冒烟 25 断言
+powershell scripts/build-example.ps1  # 构建 + 无头冒烟 23 断言
 ```
 
 ## 包边界
@@ -22,8 +22,7 @@ powershell scripts/build-example.ps1  # 构建 + 无头冒烟 25 断言
 | 包 | 职责 | 规则 |
 |---|---|---|
 | `runtime/` | 框架核心：桥接、Page/App/Component 模型、diff 引擎、wx 绑定 | 不含业务；extern "js" 只许出现在这里与 engine |
-| `yuan/` | 人民币大写金额（双向），纯逻辑 | 禁止平台依赖，保持多后端可编译；quickcheck 仅 test 导入 |
-| `engine/` | 示范应用业务 | 可单测；不直接 `#export_name` |
+| `engine/` | 最小示例 fixture（冒烟宿主） | 可单测；不直接 `#export_name` |
 | `engine-export/` | CJS 导出包装 | 只做转发，禁止逻辑 |
 
 ## 已踩过的坑（务必遵守）
@@ -34,7 +33,7 @@ powershell scripts/build-example.ps1  # 构建 + 无头冒烟 25 断言
 4. **元组跨 FFI 是 `{_0,_1}` 对象**：跨 FFI 传列表一律用平行 `FixedArray`。
 5. **多行字符串 `#|` 只能出现在 let 绑定 / FFI / 括号内**。
 6. **`#export_name` 与 `moon test` 不兼容**：导出名交给 moon.pkg 的 `link.js.exports`。
-7. **const 必须大写**（`MAX_YUAN`），小写用 `let`。
+7. **const 必须大写**，小写全局用 `let`。
 8. **Map 索引 `m[k]` 直接返回 V（可能 panic）**，安全取值用 `m.get(k)`。
 9. **Json 构造器**：`Json` 是只读枚举，外部构造用 `Json::object(Map)/empty_object()` 与 `jstr/jnum/jobj`；模式匹配写 `Json::Number(d, ..)`。
 10. **extern "js" 仅 js 后端可用**：runtime 全包按 js 目标走（preferred_target 已设 js）。
@@ -44,4 +43,4 @@ powershell scripts/build-example.ps1  # 构建 + 无头冒烟 25 断言
 
 ## 验收口径
 
-任何改动在提交前必须四绿：`moon check`、`moon test`（37）、`moon fmt`（无 diff）、冒烟 `ALL SMOKE TESTS PASSED`（25）。
+任何改动在提交前必须四绿：`moon check`、`moon test`（24）、`moon fmt`（无 diff）、冒烟 `ALL SMOKE TESTS PASSED`（23）。

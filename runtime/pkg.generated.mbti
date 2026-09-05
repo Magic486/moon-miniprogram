@@ -8,6 +8,8 @@ import {
 // Values
 pub fn app_config() -> JsVal raise MpError
 
+pub fn choose_image(count? : Int, on_result~ : (Array[String]) -> Unit) -> Unit
+
 pub fn clear_storage() -> Unit
 
 pub fn component(String) -> Unit raise MpError
@@ -28,6 +30,8 @@ pub fn get_global_data() -> Json?
 
 pub fn get_storage(String) -> Json
 
+pub fn hide_loading() -> Unit
+
 pub fn hide_toast() -> Unit
 
 pub fn jarr(Array[Json]) -> Json
@@ -44,6 +48,8 @@ pub fn jstr(String) -> Json
 
 pub fn launch() -> Unit raise MpError
 
+pub fn make_phone_call(String) -> Unit
+
 pub fn navigate_back(delta? : Int) -> Unit
 
 pub fn navigate_to(String) -> Unit
@@ -51,6 +57,8 @@ pub fn navigate_to(String) -> Unit
 pub fn page(String) -> Unit raise MpError
 
 pub fn page_config(String) -> JsVal raise MpError
+
+pub fn page_scroll_to(Int, duration? : Int) -> Unit
 
 pub fn patch_to_json(Array[(String, Json)]) -> Json
 
@@ -64,13 +72,21 @@ pub fn register_page(PageDef) -> Unit
 
 pub fn remove_storage(String) -> Unit
 
-pub fn request(String, http_method? : HttpMethod, data? : Json, (Int, Json) -> Unit, (String) -> Unit) -> Unit
+pub fn request(String, http_method? : HttpMethod, data? : Json, (Int, Json, Json) -> Unit, (String) -> Unit) -> Unit
 
 pub fn set_clipboard(String) -> Unit
 
 pub fn set_global_data(Json) -> Unit
 
+pub fn set_nav_title(String) -> Unit
+
 pub fn set_storage(String, Json) -> Unit
+
+pub fn share_card(String, path? : String, image_url? : String) -> Json
+
+pub fn show_loading(String, mask? : Bool) -> Unit
+
+pub fn stop_pull_down_refresh() -> Unit
 
 pub fn switch_tab(String) -> Unit
 
@@ -101,6 +117,7 @@ pub(all) struct ComponentDef {
   data : Json
   handlers : Array[(String, (PageCtx, Payload) -> Unit)]
   observers : Array[(String, (PageCtx, Payload) -> Unit)]
+  page_lifetimes : Array[(String, (PageCtx, Payload) -> Unit)]
 }
 
 pub(all) enum HttpMethod {

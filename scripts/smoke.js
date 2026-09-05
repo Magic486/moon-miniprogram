@@ -1,9 +1,11 @@
-// 无头冒烟测试：用 sim/wx-sim.js 模拟微信小程序运行时，端到端验证引擎。
+// 无头冒烟测试：用 sim/wx-sim.js 模拟微信运行时，端到端验证 engine fixture。
+// 覆盖：装配链路、set_state 最小补丁、组件属性/事件、returns 钩子、wx 调用、错误路径。
 // 用法：node scripts/smoke.js <path/to/moon-engine.js>
 "use strict";
 
-const path = process.argv[2];
-if (!path) {
+const path = require("path");
+const enginePath = path.resolve(process.argv[2]);
+if (!process.argv[2] || !require("fs").existsSync(enginePath)) {
   console.error("usage: node scripts/smoke.js <moon-engine.js>");
   process.exit(2);
 }
@@ -23,80 +25,64 @@ function check(label, actual, expected) {
 // ---- 模拟微信运行时（sim/wx-sim.js，可复用）----
 const sim = createWxSim();
 sim.install();
+const engine = require(enginePath);
 
-// ---- 装配（与 app.js / 页面 js 等价）----
-const engine = require(path);
-
+// ---- App 装配 ----
 engine.launch();
-check("App() received config", Boolean(sim.appCfg && sim.appCfg.onLaunch !== undefined), true);
-check("globalData.version", sim.appCfg.globalData.version, "0.1.0");
+check("App() received config", Boolean(sim.appCfg && typeof sim.appCfg.onLaunch === "function"), true);
+check("globalData.version", sim.appCfg.globalData.version, "0.2.1");
 
+// ---- counter 页面 ----
 engine.page("pages/index/index");
 const idx = sim.pageCfg;
-check("index initial hint", idx.data.hint, "输入金额，实时生成规范大写");
-check("index samples", idx.data.samples.length, 5);
-check("index has handlers", typeof idx.onInput === "function" && typeof idx.onCopy === "function", true);
+check("counter initial count", idx.data.count, 0);
+check("counter handlers bound", typeof idx.onTap === "function" && typeof idx.onCopy === "function" && typeof idx.onPick === "function", true);
 
 const inst = sim.makeInstance(idx.data);
-idx.onInput.call(inst, { detail: { value: "1680.32" } });
-check("1680.32 -> upper", inst.data.upper, "壹仟陆佰捌拾圆叁角贰分");
-check("1680.32 -> valid", inst.data.valid, true);
-check("set_state emits minimal patch (4 keys)", Object.keys(inst.__patches[0]).length, 4);
 
-idx.onInput.call(inst, { detail: { value: "abc" } });
-check("abc -> upper empty", inst.data.upper, "");
-check("abc -> valid false", inst.data.valid, false);
-check("abc -> hint", inst.data.hint.includes("格式不正确"), true);
+// 点一次 +1：补丁应只含 count（最小化），data 更新
+idx.onTap.call(inst);
+check("count after tap", inst.data.count, 1);
+check("minimal patch (only count)", Object.keys(inst.__patches[0]).length === 1 && "count" in inst.__patches[0], true);
 
-idx.onInput.call(inst, { detail: { value: "6007.14" } });
-check("6007.14 -> upper", inst.data.upper, "陆仟零柒圆壹角肆分");
+// 再点一次：补丁里不该出现未提及的键（tip/picked 没变化）
+idx.onTap.call(inst);
+const p2 = inst.__patches[inst.__patches.length - 1];
+check("no-op keys absent from patch", !("tip" in p2) && !("picked" in p2), true);
+check("count after two taps", inst.data.count, 2);
 
-// set_state 增量性：samples 未提及 → 不出现在补丁中
-check("no-op keys absent from patch", "samples" in inst.__patches[inst.__patches.length - 1], false);
-
-idx.onInput.call(inst, { detail: { value: "999999999999.99" } });
-check("boundary -> upper", inst.data.upper, "玖仟玖佰玖拾玖亿玖仟玖佰玖拾玖万玖仟玖佰玖拾玖圆玖角玖分");
-
-// 复制 → 写入历史（伴随 toast + 震动等 wx 调用记录）
-idx.onInput.call(inst, { detail: { value: "1680.32" } });
+// 复制当前计数 → 走 wx 绑定链：clipboard + toast + vibrate
 idx.onCopy.call(inst);
-check("copy triggers clipboard api", sim.calls.includes("setClipboardData"), true);
-idx.onCopy.call(inst); // 重复复制不产生重复记录
-let hist = global.wx.getStorageSync("rmb_history");
-check("history size after dup copy", hist.length, 1);
+check("onCopy -> setClipboardData", sim.calls.includes("setClipboardData"), true);
+check("onCopy -> showToast", sim.calls.includes("showToast"), true);
+check("onCopy -> vibrateShort", sim.calls.includes("vibrateShort"), true);
+check("storage not touched by copy", sim.storage.size, 0);
 
-// 复制第二条，历史最新在前
-idx.onInput.call(inst, { detail: { value: "0.02" } });
-idx.onCopy.call(inst);
-hist = global.wx.getStorageSync("rmb_history");
-check("history newest first", hist[0].upper, "贰分");
-check("history keeps old", hist[1].upper, "壹仟陆佰捌拾圆叁角贰分");
-
-// 历史页
-engine.page("pages/history/history");
-const hp = sim.pageCfg;
-const hInst = sim.makeInstance(hp.data);
-hp.onShow.call(hInst);
-check("history page items", hInst.data.items.length, 2);
-
-hp.onItemTap.call(hInst, { currentTarget: { dataset: { upper: "贰分" } } });
-
-// ---- 自定义组件流：注册 → Component() 配置 → 属性翻译 → 事件出去 ----
-engine.component("components/amount-chip/amount-chip");
+// ---- tag 自定义组件：属性翻译 → 事件出去 ----
+engine.component("components/tag/tag");
 const cc = sim.componentCfg;
 check("component properties type translated", cc.properties.text.type, String);
 check("component properties default", cc.properties.text.value, "");
 const cInst = sim.makeInstance(cc.data);
-cInst.data.text = "1680.32";
+cInst.data.text = "hello-moonbit";
 cc.onTap.call(cInst);
 check("component emits pick event", cInst.__events[0].name, "pick");
-check("event detail carries value", cInst.__events[0].detail.value, "1680.32");
+check("event detail carries text", cInst.__events[0].detail.value, "hello-moonbit");
 
-// 页面消费组件事件：onPick 填入输入并转换
-idx.onPick.call(inst, { detail: { value: "1006.01" } });
-check("onPick fills input via event", inst.data.upper, "壹仟零陆圆零壹分");
+// 页面消费组件事件：onPick 把 detail.value 写入 picked
+idx.onPick.call(inst, { detail: { value: "hello-moonbit" } });
+check("onPick consumes event", inst.data.picked, "hello-moonbit");
+check("onPick patch minimal", Object.keys(inst.__patches[inst.__patches.length - 1]).length === 1, true);
 
-// 未知页面/组件路径应抛错
+// ---- about 页面：returns（onShareAppMessage 返回对象给微信）----
+engine.page("pages/about/about");
+const ab = sim.pageCfg;
+check("about onShareAppMessage bound", typeof ab.onShareAppMessage === "function", true);
+const share = ab.onShareAppMessage.call(sim.makeInstance(ab.data), {});
+check("share title", share.title, "moon-miniprogram · 用 MoonBit 写小程序");
+check("share path", share.path, "pages/index/index");
+
+// ---- 错误路径：未注册的 page/component 应抛错 ----
 let threw = false;
 try {
   engine.page("pages/none/none");

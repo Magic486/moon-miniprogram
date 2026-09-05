@@ -1,5 +1,4 @@
 import {
   "moonbitlang/core/json",
   "Magic486/moon-miniprogram/runtime" @mp,
-  "Magic486/moon-miniprogram/yuan",
 }

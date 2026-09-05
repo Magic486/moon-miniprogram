@@ -2,6 +2,21 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.3.0] - 2026-09-06
+
+### Removed（聚焦重构）
+- **移除 `yuan/`（人民币大写库）**：与"小程序框架"叙事无关，属拼盘。
+  专项能力应从业务需要里长出来，而不是预先堆砌。
+- **移除 `examples/invoice-helper/`（发票助手示范应用）**：demo 稀释焦点。
+  可运行宿主改由脚手架 `scripts/new.cjs` 生成。
+
+### Changed
+- `engine/` 收敛为**最小能力 fixture**（counter 页面 + about 页面 + tag 组件），
+  只演示框架能力、不含业务，兼作端到端冒烟宿主。
+- 冒烟断言改为针对 fixture（23 项）；模拟器抽入 `scripts/sim/wx-sim.js`。
+- `moon.mod` 移除 quickcheck 依赖；`engine/moon.pkg` 移除 yuan 引用。
+- README / 参赛说明重写为框架聚焦版，路线图增加对标 React 的迭代项。
+
 ## [0.2.1] - 2026-09-06
 
 ### Added

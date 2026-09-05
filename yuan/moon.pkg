@@ -1,5 +1,0 @@
-// 人民币大写金额：纯 MoonBit，无平台依赖，可发布为独立库
-
-import {
-  "moonbitlang/quickcheck",
-} for "test"

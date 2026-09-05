@@ -1,25 +1,31 @@
 ///|
-/// 发票助手引擎：注册应用与页面定义。
+/// 最小示例引擎（fixture）：counter 页面 + about 页面 + tag 组件。
+///
+/// 作用：1) 端到端冒烟测试的宿主（验证 launch → page/component → 微信运行时全链路）；
+///       2) 与脚手架 new.cjs 生成的模板同构，作为最小可运行范例。
+/// 不含任何业务，只演示框架能力：
+///   - counter：声明式页面 + set_state（自动最小化 setData）+ 事件进出
+///   - about：带返回值钩子 returns（onShareAppMessage + share_card）
+///   - tag：自定义组件（properties 属性进入 → trigger_event 事件出去）
 ///
 /// 构建产物为 CommonJS 模块（moon-engine.js），小程序侧用法：
-///
-/// - app.js：`require("./engine/moon-engine.js").launch()`
-/// - 页面 js：`require("../../engine/moon-engine.js").page("pages/index/index")`
+///   - app.js：`require("./engine/moon-engine.js").launch()`
+///   - 页面 js：`require("../../engine/moon-engine.js").page("pages/index/index")`
 
 ///|
 let registered : Ref[Bool] = Ref(false)
 
 ///|
-/// 幂等注册：首个入口（launch 或 page）被调用时执行一次
+/// 幂等注册：首个入口（launch / page / component）被调用时执行一次
 fn ensure_registered() -> Unit {
   if !registered.val {
     @mp.register_app({
       handlers: [("onLaunch", (_ctx, _payload) => ())],
-      global_data: @mp.jobj([("version", @mp.jstr("0.1.0"))]),
+      global_data: @mp.jobj([("version", @mp.jstr("0.2.1"))]),
     })
-    @mp.register_page(index_page())
-    @mp.register_page(history_page())
-    @mp.register_component(amount_chip())
+    @mp.register_page(counter_page())
+    @mp.register_page(about_page())
+    @mp.register_component(tag_def())
     registered.val = true
   }
 }
@@ -72,18 +78,90 @@ pub fn component(key : String) -> Unit {
 }
 
 ///|
-/// 首页快捷示例金额
-let samples : Array[String] = [
-  "1680.32", "1006.01", "107000.53", "6007.14", "999999999999.99",
-]
+/// 计数器页面：演示 set_state 的最小化补丁与事件消费
+fn counter_page() -> @mp.PageDef {
+  {
+    path: "pages/index/index",
+    data: @mp.jobj([
+      ("count", @mp.jnum(0.0)),
+      ("picked", @mp.jstr("")),
+      ("tip", @mp.jstr("点 +1：set_state 只发 count 的变化路径")),
+    ]),
+    handlers: [
+      // 按钮点击：读当前 count，+1 后仅更新该键
+      (
+        "onTap",
+        (ctx, _payload) => {
+          let n = match ctx.get_data() {
+            Some(Json::Object(m)) =>
+              match m.get("count") {
+                Some(Json::Number(d, ..)) => d + 1.0
+                _ => 1.0
+              }
+            _ => 1.0
+          }
+          ctx.set_state(@mp.jobj([("count", @mp.jnum(n))]))
+        },
+      ),
+      // 复制当前计数：演示 wx 绑定 + 调用记录
+      (
+        "onCopy",
+        (ctx, _payload) => {
+          match ctx.get_data() {
+            Some(Json::Object(m)) =>
+              match m.get("count") {
+                Some(Json::Number(d, ..)) => {
+                  @mp.copy_with_toast("count=\{d.to_int()}")
+                  @mp.vibrate_short()
+                }
+                _ => ()
+              }
+            _ => ()
+          }
+        },
+      ),
+      // 消费自定义组件事件：tag 组件 pick → 记入 picked
+      (
+        "onPick",
+        (ctx, payload) => {
+          match payload.string_at(["detail", "value"]) {
+            Some(v) => ctx.set_state(@mp.jobj([("picked", @mp.jstr(v))]))
+            None => ()
+          }
+        },
+      ),
+    ],
+    returns: [],
+  }
+}
 
 ///|
-/// 示范自定义组件：金额示例筹码。
-/// 展示组件模型的最小闭环：属性进入（text）→ 事件出去（pick），
-/// 页面在 WXML 里 `<amount-chip bind:pick="onPick" />` 消费。
-fn amount_chip() -> @mp.ComponentDef {
+/// 关于页面：演示带返回值的钩子（onShareAppMessage 需向微信返回对象）
+fn about_page() -> @mp.PageDef {
   {
-    key: "components/amount-chip/amount-chip",
+    path: "pages/about/about",
+    data: @mp.jobj([("title", @mp.jstr("moon-miniprogram"))]),
+    handlers: [("onLoad", (_ctx, _payload) => ())],
+    returns: [
+      (
+        "onShareAppMessage",
+        (_ctx, _payload) => {
+          @mp.share_card(
+            "moon-miniprogram · 用 MoonBit 写小程序",
+            path="pages/index/index",
+          )
+        },
+      ),
+    ],
+  }
+}
+
+///|
+/// 自定义组件：标签 chip。属性 text 进入，点击把 text 以 pick 事件送出。
+/// 演示 Component 模型的完整闭环（属性翻译 → 方法 this 绑定 → triggerEvent）。
+fn tag_def() -> @mp.ComponentDef {
+  {
+    key: "components/tag/tag",
     properties: @mp.jobj([
       ("text", @mp.jobj([("t", @mp.jstr("String")), ("value", @mp.jstr(""))])),
     ]),
@@ -106,183 +184,5 @@ fn amount_chip() -> @mp.ComponentDef {
     ],
     observers: [],
     page_lifetimes: [],
-  }
-}
-
-///|
-/// 首页：金额输入 → 人民币大写（实时）→ 复制 / 存历史
-fn index_page() -> @mp.PageDef {
-  {
-    path: "pages/index/index",
-    data: @mp.jobj([
-      ("input", @mp.jstr("")),
-      ("upper", @mp.jstr("")),
-      ("valid", @mp.jbool(false)),
-      ("hint", @mp.jstr("输入金额，实时生成规范大写")),
-      ("samples", @mp.jarr(samples.map(fn(s) { @mp.jstr(s) }))),
-    ]),
-    handlers: [
-      (
-        "onInput",
-        (ctx, payload) => {
-          let raw = match payload.string_at(["detail", "value"]) {
-            Some(s) => s
-            None => ""
-          }
-          update_amount(ctx, raw)
-        },
-      ),
-      (
-        "onSample",
-        (ctx, payload) => {
-          match payload.string_at(["currentTarget", "dataset", "v"]) {
-            Some(v) => update_amount(ctx, v)
-            None => ()
-          }
-        },
-      ),
-      (
-        "onCopy",
-        (ctx, _payload) => {
-          match ctx.get_data() {
-            Some(Json::Object(m)) =>
-              match m.get("upper") {
-                Some(Json::String(upper)) =>
-                  if upper != "" {
-                    match m.get("input") {
-                      Some(Json::String(input)) => remember(input, upper)
-                      _ => ()
-                    }
-                    @mp.copy_with_toast(upper, tip="大写已复制")
-                  } else {
-                    @mp.toast("请先输入有效金额", icon=@mp.Plain)
-                  }
-                _ => @mp.toast("请先输入有效金额", icon=@mp.Plain)
-              }
-            _ => @mp.toast("请先输入有效金额", icon=@mp.Plain)
-          }
-        },
-      ),
-      (
-        "goHistory",
-        (_ctx, _payload) => @mp.navigate_to("/pages/history/history"),
-      ),
-      (
-        "onPick",
-        (ctx, payload) => {
-          match payload.string_at(["detail", "value"]) {
-            Some(v) => update_amount(ctx, v)
-            None => ()
-          }
-        },
-      ),
-    ],
-    returns: [],
-  }
-}
-
-///|
-/// 输入变化：校验并实时更新大写结果。
-/// 这里用 set_state（自动 diff 为最小路径补丁）替代 set_data 全键透传。
-fn update_amount(ctx : @mp.PageCtx, raw : String) -> Unit {
-  let upper = @yuan.to_rmb_upper(raw) catch { _ => "" }
-  let valid = upper != ""
-  let hint = if raw == "" {
-    "输入金额，实时生成规范大写"
-  } else if valid {
-    ""
-  } else {
-    "金额格式不正确（支持 0 ~ 9999 亿，最多两位小数）"
-  }
-  ctx.set_state(
-    @mp.jobj([
-      ("input", @mp.jstr(raw)),
-      ("upper", @mp.jstr(upper)),
-      ("valid", @mp.jbool(valid)),
-      ("hint", @mp.jstr(hint)),
-    ]),
-  )
-}
-
-///|
-/// 历史页：读取 / 清空 / 点按再复制
-fn history_page() -> @mp.PageDef {
-  {
-    path: "pages/history/history",
-    data: @mp.jobj([("items", @mp.jarr([]))]),
-    handlers: [
-      (
-        "onShow",
-        (ctx, _payload) => ctx.set_data(@mp.jobj([("items", load_history())])),
-      ),
-      (
-        "onItemTap",
-        (_ctx, payload) => {
-          match payload.string_at(["currentTarget", "dataset", "upper"]) {
-            Some(u) => @mp.copy_with_toast(u, tip="大写已复制")
-            None => ()
-          }
-        },
-      ),
-      (
-        "onClear",
-        (ctx, _payload) => {
-          @mp.confirm("清空历史", "确定清空全部复制历史吗？", on_result=fn(
-            ok,
-          ) {
-            if ok {
-              @mp.remove_storage("rmb_history")
-              ctx.set_data(@mp.jobj([("items", @mp.jarr([]))]))
-              @mp.toast("已清空")
-            }
-          })
-        },
-      ),
-    ],
-    returns: [],
-  }
-}
-
-///|
-/// 读取历史（缓存缺失返回空数组）
-fn load_history() -> Json {
-  let h = @mp.get_storage("rmb_history")
-  if h is Json::Array(_) {
-    h
-  } else {
-    @mp.jarr([])
-  }
-}
-
-///|
-/// 记录一次复制：按大写去重，最新在前，最多保留 20 条
-fn remember(input : String, upper : String) -> Unit {
-  let entry = @mp.jobj([("input", @mp.jstr(input)), ("upper", @mp.jstr(upper))])
-  let items : Array[Json] = match @mp.get_storage("rmb_history") {
-    Json::Array(a) => a
-    _ => []
-  }
-  let out : Array[Json] = [entry]
-  let mut i = items.length() - 1
-  while i >= 0 && out.length() < 20 {
-    let it = items[i]
-    if item_upper(it) != upper {
-      out.push(it)
-    }
-    i = i - 1
-  }
-  @mp.set_storage("rmb_history", @mp.jarr(out))
-}
-
-///|
-/// 读取历史条目的大写字段
-fn item_upper(it : Json) -> String {
-  match it {
-    Json::Object(m) =>
-      match m.get("upper") {
-        Some(Json::String(s)) => s
-        _ => ""
-      }
-    _ => ""
   }
 }
