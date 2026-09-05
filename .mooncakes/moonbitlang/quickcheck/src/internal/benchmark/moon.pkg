@@ -1,8 +1,0 @@
-import {
-  "moonbitlang/quickcheck" @qc,
-  "moonbitlang/quickcheck/gen",
-  "moonbitlang/quickcheck/feat",
-  "moonbitlang/core/bench",
-}
-
-warnings = "+unnecessary_annotation"
