@@ -96,6 +96,27 @@ idx.onBuy.call(instA);
 check("unbound B not updated", instB.data.cartCount, 1);
 check("A keeps updating after B unbound", instA.data.cartCount, 2);
 
+// ---- 声明式路由：白名单参数 → 安全 URL 导航 ----
+idx.onGoAbout.call(instA); // from 保留、t 剥离
+check(
+  "route navigate keeps allowed param",
+  sim.navigations[sim.navigations.length - 1],
+  "pages/about/about?from=counter",
+);
+check("navigateTo invoked", sim.calls.includes("navigateTo"), true);
+ab.onGoHome.call(instB); // 无参导航
+check(
+  "route navigate bare path",
+  sim.navigations[sim.navigations.length - 1],
+  "pages/index/index",
+);
+idx.onGoAbout.call(instA); // 再导航一次，确认 URL 稳定
+check(
+  "route url stable across calls",
+  sim.navigations[sim.navigations.length - 1],
+  "pages/about/about?from=counter",
+);
+
 // ---- about 页面：returns（onShareAppMessage 返回对象给微信）----
 check("about onShareAppMessage bound", typeof ab.onShareAppMessage === "function", true);
 const share = ab.onShareAppMessage.call(sim.makeInstance(ab.data), {});

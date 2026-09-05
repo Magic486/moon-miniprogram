@@ -213,9 +213,14 @@ extern "js" fn wx_request(
   #|})
 
 ///|
-/// 通用 wx 调用：方法名 + JSON 参数串
+/// 通用 wx 调用：方法名 + JSON 参数串。
+/// 无 wx 环境（node 单测 / 模拟器未安装时）静默跳过，保证调用安全。
 extern "js" fn wx_call(api : String, json : String) -> Unit =
-  #|(api, json) => wx[api](JSON.parse(json))
+  #|(api, json) => {
+  #|  if (typeof wx !== "undefined" && wx[api]) {
+  #|    wx[api](JSON.parse(json));
+  #|  }
+  #|}
 
 ///|
 /// 触发短震动反馈

@@ -132,8 +132,8 @@ makePhoneCall / request（statusCode + header 齐备）/ vibrate / share_card…
 
 | 层 | 命令 | 覆盖 |
 |---|---|---|
-| 单元 | `moon test` | **27 个测试**：diff 黄金用例 12 + **200 轮随机不变式**（LCG 可复现）+ 桥接 11 + store 订阅 3 |
-| 冒烟 | `node scripts/smoke.js` | **31 项断言**，端到端跑通 App/页面/组件/跨页 store 装配链路 |
+| 单元 | `moon test` | **31 个测试**：diff 黄金用例 12 + 200 轮随机不变式 + 桥接 11 + store 订阅 3 + 路由 4 |
+| 冒烟 | `node scripts/smoke.js` | **35 项断言**，端到端跑通 App/页面/组件/跨页 store/声明式路由链路 |
 | 验收 | 微信开发者工具 | 用脚手架项目做真机验证 |
 
 **`scripts/sim/wx-sim.js`** —— 可复用无头模拟器：给任何 MoonBit 小程序项目
@@ -150,13 +150,29 @@ scripts/          # new.cjs 脚手架 · wx-sim.js 模拟器 · smoke.js · mini
 docs/参赛说明.md  # 参赛材料草稿
 ```
 
+### 声明式路由（不手拼 url）
+
+```moonbit nocheck
+@mp.register_route({ path: "pages/about/about", params: ["from"] })
+
+// 页面 handler 里导航：合法参数保留、拼写错的参数自动剥离 + dev 警告
+("onGo", (_ctx, _) => @mp.navigate_to_route(
+  "pages/about/about",
+  params={ "from": "index", "fromm": "拼错了" },  // fromm 被剥离并 warn
+))
+// 还有 redirect_to_route / switch_tab_route
+```
+
+接收端在 onLoad 用 `payload.string_at(["from"])` 读参数。
+路由未注册 / 参数越界都只 `console.warn` + 安全降级，**绝不 raise**——页面 handler 调用零风险。
+
 ## 路线图
 
 - [x] Page/App/Component 模型 + wx 绑定 + `set_state` 自动 diff
 - [x] 带回值钩子、pageLifetimes、全局数据
 - [x] 可复用无头模拟器 + 脚手架 + 基准快照
 - [x] **跨页状态订阅**（对标 React context：一处 set，订阅页面自动最小同步）
-- [ ] **声明式路由**（RouteDef 表 + 类型安全的页面参数）
+- [x] **声明式路由**（RouteDef 白名单参数 + 类型安全导航 + dev 警告安全降级）
 - [ ] **CLI 一键化**（dev 自动 build+watch、test、build release）
 - [ ] 错误边界与 dev 警告、API 覆盖到常用 60+
 

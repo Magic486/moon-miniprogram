@@ -45,7 +45,7 @@ function createWxSim() {
   const wx = {};
   const noopApis = [
     "showToast", "hideToast", "showModal", "setClipboardData",
-    "navigateTo", "redirectTo", "switchTab", "navigateBack",
+    "redirectTo", "switchTab", "navigateBack",
     "vibrateShort", "showLoading", "hideLoading",
     "stopPullDownRefresh", "setNavigationBarTitle", "pageScrollTo",
     "makePhoneCall",
@@ -53,6 +53,11 @@ function createWxSim() {
   for (const name of noopApis) {
     wx[name] = () => sim.calls.push(name);
   }
+  wx.navigateTo = (opts) => {
+    sim.calls.push("navigateTo");
+    sim.navigations.push(opts && opts.url);
+  };
+  sim.navigations = [];
   wx.chooseImage = (opts) => {
     sim.calls.push("chooseImage");
     if (opts && typeof opts.success === "function") {

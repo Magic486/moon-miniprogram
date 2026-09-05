@@ -26,6 +26,9 @@ fn ensure_registered() -> Unit {
     @mp.register_page(counter_page())
     @mp.register_page(about_page())
     @mp.register_component(tag_def())
+    // 声明式路由：页面 + 参数白名单
+    @mp.register_route({ path: "pages/index/index", params: [] })
+    @mp.register_route({ path: "pages/about/about", params: ["from"] })
     registered.val = true
   }
 }
@@ -101,6 +104,16 @@ fn counter_page() -> @mp.PageDef {
     handlers: [
       // 订阅共享状态：快照注入 cartCount，之后 store.set 自动同步
       ("onLoad", (ctx, _payload) => ctx.bind_store(cart)),
+      // 声明式路由导航：合法参数（from）保留，多余参数（t）自动剥离 + dev 警告
+      (
+        "onGoAbout",
+        (_ctx, _payload) => {
+          @mp.navigate_to_route("pages/about/about", params={
+            "from": "counter",
+            "t": @mp.jnum(1.0),
+          })
+        },
+      ),
       // 页面离开时退订，避免悬挂引用
       ("onUnload", (ctx, _payload) => ctx.unbind_store(cart)),
       // 一处 set、全员同步：about 页 cartCount 自动 +1
@@ -175,6 +188,11 @@ fn about_page() -> @mp.PageDef {
       // 与 counter 页订阅同一个 store：counter 里 onBuy，这里自动同步
       ("onLoad", (ctx, _payload) => ctx.bind_store(cart)),
       ("onUnload", (ctx, _payload) => ctx.unbind_store(cart)),
+      // 无参路由返回首页
+      (
+        "onGoHome",
+        (_ctx, _payload) => @mp.navigate_to_route("pages/index/index"),
+      ),
     ],
     returns: [
       (

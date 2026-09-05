@@ -2,6 +2,22 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.3.2] - 2026-09-06
+
+### Added（声明式路由）
+- **`register_route` / RouteDef**：集中声明页面路径 + query 参数白名单。
+- **`navigate_to_route` / `redirect_to_route` / `switch_tab_route`**：不再手拼 url；
+  合法参数保留并正确 URI 编码，白名单外的键**自动剥离 + console.warn**，
+  未注册路由同样警告降级——**绝不 raise**，页面 handler 内调用零风险。
+- **`route_url`** 纯函数（编码/去 .0/布尔文本，可单测）；
+  `route_registered` / `route_allowed_params` / `route_count` 调试助手。
+- wx_call 加无 wx 环境 guard（node 单测安全）；sim 的 navigateTo 记录导航 URL。
+- fixture：counter→about 带参导航（from 保留、t 剥离演示）、about→index 无参导航。
+- 单测 +4（url 编码/注册表/白名单剥离/安全降级）；冒烟 +4（35 断言）。
+
+### Changed
+- `runtime/router.mbt` 新增；单测 31。
+
 ## [0.3.1] - 2026-09-06
 
 ### Added（对标 React context 的跨页状态层）
