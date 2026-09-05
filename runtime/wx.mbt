@@ -311,3 +311,97 @@ pub fn share_card(
   }
   jobj(fields)
 }
+
+///|
+/// 操作菜单（ActionSheet）：用户点某项回调索引，点取消回调 None
+pub fn show_action_sheet(
+  items : Array[String],
+  on_result~ : (Int?) -> Unit,
+  title? : String = "",
+) -> Unit {
+  wx_action_sheet(title, items, on_result)
+}
+
+///|
+extern "js" fn wx_action_sheet(
+  title : String,
+  items : Array[String],
+  cb : (Int?) -> Unit,
+) -> Unit =
+  #|(title, items, cb) => {
+  #|  if (typeof wx === "undefined" || !wx.showActionSheet) { return; }
+  #|  wx.showActionSheet({
+  #|    itemList: items,
+  #|    title: title === "" ? undefined : title,
+  #|    success: (res) => cb(res.tapIndex | 0),
+  #|    fail: () => cb(null),
+  #|  });
+  #|}
+
+///|
+/// 系统信息快照（getSystemInfoSync 的结果对象）
+pub fn system_info() -> Json {
+  match wx_system_info().to_json() {
+    Some(j) => j
+    None => Json::empty_object()
+  }
+}
+
+///|
+extern "js" fn wx_system_info() -> JsVal =
+  #|() => {
+  #|  if (typeof wx === "undefined" || !wx.getSystemInfoSync) { return {}; }
+  #|  return wx.getSystemInfoSync();
+  #|}
+
+///|
+/// 预览图片：urls 为图片地址列表，current 为当前显示（默认首张）
+pub fn preview_image(urls : Array[String], current? : String = "") -> Unit {
+  let cur = if current == "" {
+    urls[0]
+  } else {
+    current
+  }
+  wx_call(
+    "previewImage",
+    jobj([("urls", jarr(urls.map(fn(u) { jstr(u) }))), ("current", jstr(cur))])
+      .stringify(),
+  )
+}
+
+///|
+/// 扫码：成功回调解码内容，取消/失败回调空字符串
+pub fn scan_code(on_result~ : (String) -> Unit) -> Unit {
+  wx_scan_code(on_result)
+}
+
+///|
+extern "js" fn wx_scan_code(cb : (String) -> Unit) -> Unit =
+  #|(cb) => {
+  #|  if (typeof wx === "undefined" || !wx.scanCode) { cb(""); return; }
+  #|  wx.scanCode({
+  #|    success: (res) => cb(String(res.result || "")),
+  #|    fail: () => cb(""),
+  #|  });
+  #|}
+
+///|
+/// 打开位置：在地图应用中展示坐标点
+pub fn open_location(
+  latitude : Double,
+  longitude : Double,
+  name? : String = "",
+  address? : String = "",
+) -> Unit {
+  let fields : Array[(String, Json)] = [
+    ("latitude", jnum(latitude)),
+    ("longitude", jnum(longitude)),
+  ]
+  if name != "" {
+    fields.push(("name", jstr(name)))
+  }
+  if address != "" {
+    fields.push(("address", jstr(address)))
+  }
+  wx_call("openLocation", jobj(fields).stringify())
+}

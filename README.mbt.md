@@ -143,8 +143,8 @@ makePhoneCall / request（statusCode + header 齐备）/ vibrate / share_card…
 
 | 层 | 命令 | 覆盖 |
 |---|---|---|
-| 单元 | `moon test` | **31 个测试**：diff 黄金用例 12 + 200 轮随机不变式 + 桥接 11 + store 订阅 3 + 路由 4 |
-| 冒烟 | `node scripts/smoke.js` | **35 项断言**，端到端跑通 App/页面/组件/跨页 store/声明式路由链路 |
+| 单元 | `moon test` | **33 个测试**：diff 黄金用例 12 + 200 轮随机不变式 + 桥接 + store 订阅 + 路由 4 + wx 降级 |
+| 冒烟 | `node scripts/smoke.js` | **36 项断言**，端到端跑通 App/页面/组件/跨页 store/声明式路由链路 |
 | 验收 | 微信开发者工具 | 用脚手架项目做真机验证 |
 
 **`scripts/sim/wx-sim.js`** —— 可复用无头模拟器：给任何 MoonBit 小程序项目

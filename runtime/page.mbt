@@ -165,6 +165,11 @@ let page_registry : Map[String, PageDef] = Map([])
 ///|
 /// 注册页面定义（须在对应页面 JS 执行前完成，通常在 app 入口处）
 pub fn register_page(def : PageDef) -> Unit {
+  if page_registry.contains(def.path) {
+    js_dev_warn(
+      "register_page: 页面 \"\{def.path}\" 重复注册，旧定义被覆盖（幂等注册请收敛到 ensure_registered）",
+    )
+  }
   page_registry[def.path] = def
 }
 

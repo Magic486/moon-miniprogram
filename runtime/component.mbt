@@ -34,6 +34,11 @@ let component_registry : Map[String, ComponentDef] = Map([])
 ///|
 /// 注册组件定义（在 app 入口或引擎初始化时执行一次）
 pub fn register_component(def : ComponentDef) -> Unit {
+  if component_registry.contains(def.key) {
+    js_dev_warn(
+      "register_component: 组件 \"\{def.key}\" 重复注册，旧定义被覆盖（幂等注册请收敛到 ensure_registered）",
+    )
+  }
   component_registry[def.key] = def
 }
 

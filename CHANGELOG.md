@@ -2,6 +2,17 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.3.4] - 2026-09-06
+
+### Added（错误边界 + API 覆盖）
+- **wx API 补全组**：`show_action_sheet`（回调索引/取消 None）、`system_info`（同步快照）、
+  `preview_image`、`scan_code`、`open_location`——全部带无 wx 环境安全降级 guard。
+- **重复注册 dev 警告**：`register_page` / `register_component` 检测到同名覆盖时
+  console.warn（防静默覆盖 bug，幂等注册收敛到 ensure_registered）。
+- **全局错误钩子演示**：AppDef `onError`（未捕获 JS 异常汇聚点，可做上报），
+  fixture 注册 + 冒烟断言绑定存在。
+- 单测 +2（wx 高频 API 无环境降级 / 重复注册覆盖）；冒烟 +1（36 断言）。
+
 ## [0.3.3] - 2026-09-06
 
 ### Added（一键 CLI mmp.cjs）

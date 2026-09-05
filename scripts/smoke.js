@@ -30,7 +30,8 @@ const engine = require(enginePath);
 // ---- App 装配 ----
 engine.launch();
 check("App() received config", Boolean(sim.appCfg && typeof sim.appCfg.onLaunch === "function"), true);
-check("globalData.version", sim.appCfg.globalData.version, "0.2.1");
+check("globalData.version", sim.appCfg.globalData.version, "0.3.4");
+check("App onError global hook bound", typeof sim.appCfg.onError === "function", true);
 
 // ---- counter 页面 ----
 engine.page("pages/index/index");

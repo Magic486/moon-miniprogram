@@ -20,8 +20,12 @@ let registered : Ref[Bool] = Ref(false)
 fn ensure_registered() -> Unit {
   if !registered.val {
     @mp.register_app({
-      handlers: [("onLaunch", (_ctx, _payload) => ())],
-      global_data: @mp.jobj([("version", @mp.jstr("0.2.1"))]),
+      handlers: [
+        ("onLaunch", (_ctx, _payload) => ()),
+        // 全局错误边界：未捕获 JS 异常汇聚于此（可做上报/提示）
+        ("onError", (_ctx, _payload) => ()),
+      ],
+      global_data: @mp.jobj([("version", @mp.jstr("0.3.4"))]),
     })
     @mp.register_page(counter_page())
     @mp.register_page(about_page())
