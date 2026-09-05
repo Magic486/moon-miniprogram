@@ -2,6 +2,26 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.2.1] - 2026-09-06
+
+### Added
+- **补丁传输量基准**：`runtime/bench_test.mbt` 快照持续回归——1000 项清单追加 1 项
+  补丁 49B vs 全量 34,959B（~713×），无变化零 setData；README 增加实测数字表。
+- **wx API 补绑**：`show_loading` / `hide_loading` / `stop_pull_down_refresh` /
+  `set_nav_title` / `page_scroll_to` / `make_phone_call` / `choose_image`。
+- **转发卡片 helper**：`share_card(title~, path~, image_url~)` 构造
+  onShareAppMessage 返回值。
+- **组件 pageLifetimes**：`ComponentDef.page_lifetimes`（组件所在页面 show/hide/resize，
+  空时不生成键）。
+- **request 补全**：on_response 第三参数暴露响应头。
+- **随机不变式测试**：200 轮 LCG 可复现的 diff_partial 根键不变式
+  （键在补丁中 ⇔ 值变化且补丁值恒等于新值；自反为空）。
+- **可复用模拟器**：`scripts/sim/wx-sim.js`——给任意 MoonBit 小程序引擎写
+  无头测试（App/Page/Component/wx/storage 模拟、路径感知 setData、wx 调用记录）。
+
+### Changed
+- `PageDef`/`ComponentDef` 构造无需改动（新增字段有默认构造路径）。
+
 ## [0.2.0] - 2026-09-06
 
 ### Added
