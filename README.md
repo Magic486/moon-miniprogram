@@ -60,11 +60,27 @@ node scripts/minify.cjs <engine-export.js> # 233 KB → 134 KB（terser）
 
 ## 核心能力
 
-### 状态管理：`set_state` 自动 diff
+### 状态管理：`set_state` 自动 diff + 跨页 store
 
 微信官方要求 "setData 只传变化路径"，手写极易出错。框架让它成为默认行为：
 部分合并（React setState 语义）、根键合并 + 叶子路径展开 + 数组下标级最小补丁、
 **数据无变化时零 setData**。
+
+**跨页状态订阅（对标 React context / mobx）**——多页面共享同一数据源：
+
+```moonbit nocheck
+let cart = @mp.create_store("cart", @mp.jobj([("cartCount", @mp.jnum(0.0))]))
+
+// 任意页面 onLoad 订阅：快照立即同步进页面 data
+("onLoad", (ctx, _) => ctx.bind_store(cart))
+("onUnload", (ctx, _) => ctx.unbind_store(cart))
+
+// 任一页面处理器里一处更新 → 所有订阅页面自动收到最小补丁
+("onBuy", (ctx, _) => { cart.set(@mp.jobj([("cartCount", @mp.jnum(1.0))])) })
+```
+
+`store.set` 对每个订阅页面走同一 diff 引擎：只推变化的键（无变化的页面零 setData），
+页面/组件均可订阅，同名键以 store 为准。
 
 **实测传输量**（快照测试 `runtime/bench_test.mbt` 持续回归，单位 = setData JSON 字节）：
 
@@ -116,8 +132,8 @@ makePhoneCall / request（statusCode + header 齐备）/ vibrate / share_card…
 
 | 层 | 命令 | 覆盖 |
 |---|---|---|
-| 单元 | `moon test` | **24 个测试**：diff 黄金用例 12 + **200 轮随机不变式**（LCG 可复现）+ 桥接 11 |
-| 冒烟 | `node scripts/smoke.js` | **23 项断言**，端到端跑通 App/页面/组件装配链路 |
+| 单元 | `moon test` | **27 个测试**：diff 黄金用例 12 + **200 轮随机不变式**（LCG 可复现）+ 桥接 11 + store 订阅 3 |
+| 冒烟 | `node scripts/smoke.js` | **31 项断言**，端到端跑通 App/页面/组件/跨页 store 装配链路 |
 | 验收 | 微信开发者工具 | 用脚手架项目做真机验证 |
 
 **`scripts/sim/wx-sim.js`** —— 可复用无头模拟器：给任何 MoonBit 小程序项目
@@ -139,7 +155,7 @@ docs/参赛说明.md  # 参赛材料草稿
 - [x] Page/App/Component 模型 + wx 绑定 + `set_state` 自动 diff
 - [x] 带回值钩子、pageLifetimes、全局数据
 - [x] 可复用无头模拟器 + 脚手架 + 基准快照
-- [ ] **跨页状态订阅**（对标 React context/store：页面 A 改动，页面 B 自动刷新）
+- [x] **跨页状态订阅**（对标 React context：一处 set，订阅页面自动最小同步）
 - [ ] **声明式路由**（RouteDef 表 + 类型安全的页面参数）
 - [ ] **CLI 一键化**（dev 自动 build+watch、test、build release）
 - [ ] 错误边界与 dev 警告、API 覆盖到常用 60+

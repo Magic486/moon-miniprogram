@@ -78,7 +78,18 @@ pub fn component(key : String) -> Unit {
 }
 
 ///|
-/// 计数器页面：演示 set_state 的最小化补丁与事件消费
+/// 共享购物车状态（跨页订阅示例）：counter 页 onBuy 修改，
+/// about 页（同源订阅）自动收到最小补丁。
+let cart : @mp.Store = @mp.create_store(
+  "cart",
+  @mp.jobj([
+    ("cartCount", @mp.jnum(0.0)),
+    ("note", @mp.jstr("共享状态：counter 页 set，about 页同步")),
+  ]),
+)
+
+///|
+/// 计数器页面：演示 set_state 最小化补丁、事件消费与跨页 store 订阅
 fn counter_page() -> @mp.PageDef {
   {
     path: "pages/index/index",
@@ -88,6 +99,25 @@ fn counter_page() -> @mp.PageDef {
       ("tip", @mp.jstr("点 +1：set_state 只发 count 的变化路径")),
     ]),
     handlers: [
+      // 订阅共享状态：快照注入 cartCount，之后 store.set 自动同步
+      ("onLoad", (ctx, _payload) => ctx.bind_store(cart)),
+      // 页面离开时退订，避免悬挂引用
+      ("onUnload", (ctx, _payload) => ctx.unbind_store(cart)),
+      // 一处 set、全员同步：about 页 cartCount 自动 +1
+      (
+        "onBuy",
+        (ctx, _payload) => {
+          let n = match ctx.get_data() {
+            Some(Json::Object(m)) =>
+              match m.get("cartCount") {
+                Some(Json::Number(d, ..)) => d + 1.0
+                _ => 1.0
+              }
+            _ => 1.0
+          }
+          cart.set(@mp.jobj([("cartCount", @mp.jnum(n))]))
+        },
+      ),
       // 按钮点击：读当前 count，+1 后仅更新该键
       (
         "onTap",
@@ -136,12 +166,16 @@ fn counter_page() -> @mp.PageDef {
 }
 
 ///|
-/// 关于页面：演示带返回值的钩子（onShareAppMessage 需向微信返回对象）
+/// 关于页面：演示带返回值的钩子（onShareAppMessage）与跨页 store 订阅
 fn about_page() -> @mp.PageDef {
   {
     path: "pages/about/about",
     data: @mp.jobj([("title", @mp.jstr("moon-miniprogram"))]),
-    handlers: [("onLoad", (_ctx, _payload) => ())],
+    handlers: [
+      // 与 counter 页订阅同一个 store：counter 里 onBuy，这里自动同步
+      ("onLoad", (ctx, _payload) => ctx.bind_store(cart)),
+      ("onUnload", (ctx, _payload) => ctx.unbind_store(cart)),
+    ],
     returns: [
       (
         "onShareAppMessage",

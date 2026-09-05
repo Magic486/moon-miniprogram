@@ -2,6 +2,21 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.3.1] - 2026-09-06
+
+### Added（对标 React context 的跨页状态层）
+- **`create_store` / `Store::set` / `Store::snapshot`**：跨页单一状态源
+  （顶层键合并更新）。
+- **`PageCtx::bind_store` / `unbind_store`**：页面/组件订阅；bind 即同步快照，
+  `store.set` 一处更新 → 所有订阅页面自动收到**最小化 setData 补丁**
+  （复用 diff 引擎，无变化页面零调用）；bind 幂等，unbind 防悬挂引用。
+- fixture 更新：counter 页与 about 页共享 cart store（onBuy 一处 set → 两页同步），
+  冒烟增加跨页同步/最小补丁/退订停止等 8 项断言。
+- 单测 +3（store 订阅语义/幂等/键覆盖）；`Store::subscriber_count`/`label` 调试助手。
+
+### Changed
+- `runtime/store.mbt` 新增；冒烟 31 断言、单测 27。
+
 ## [0.3.0] - 2026-09-06
 
 ### Removed（聚焦重构）

@@ -74,9 +74,29 @@ idx.onPick.call(inst, { detail: { value: "hello-moonbit" } });
 check("onPick consumes event", inst.data.picked, "hello-moonbit");
 check("onPick patch minimal", Object.keys(inst.__patches[inst.__patches.length - 1]).length === 1, true);
 
-// ---- about 页面：returns（onShareAppMessage 返回对象给微信）----
+// ---- 跨页 store 订阅：一处 set，全部订阅页面自动最小同步 ----
+const instA = sim.makeInstance(idx.data);
+idx.onLoad.call(instA); // counter 订阅 cart：快照注入 cartCount
+check("store bind syncs snapshot to A", instA.data.cartCount, 0);
 engine.page("pages/about/about");
 const ab = sim.pageCfg;
+const instB = sim.makeInstance(ab.data);
+ab.onLoad.call(instB); // about 订阅同一 cart
+check("store bind syncs snapshot to B", instB.data.cartCount, 0);
+
+idx.onBuy.call(instA); // A 里一处 set
+check("A view updated by own set", instA.data.cartCount, 1);
+check("B auto-synced cross-page", instB.data.cartCount, 1);
+const bp = instB.__patches[instB.__patches.length - 1];
+check("B receives minimal patch (cartCount only)", Object.keys(bp).length === 1 && bp.cartCount === 1, true);
+check("B seed keys untouched", "title" in instB.data && !("title" in bp), true);
+
+ab.onUnload.call(instB); // B 退订
+idx.onBuy.call(instA);
+check("unbound B not updated", instB.data.cartCount, 1);
+check("A keeps updating after B unbound", instA.data.cartCount, 2);
+
+// ---- about 页面：returns（onShareAppMessage 返回对象给微信）----
 check("about onShareAppMessage bound", typeof ab.onShareAppMessage === "function", true);
 const share = ab.onShareAppMessage.call(sim.makeInstance(ab.data), {});
 check("share title", share.title, "moon-miniprogram · 用 MoonBit 写小程序");
