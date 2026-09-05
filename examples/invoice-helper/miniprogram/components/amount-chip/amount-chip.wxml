@@ -1,0 +1,1 @@
+<view class="chip" bind:tap="onTap">{{text}}</view>

@@ -2,6 +2,8 @@
 package "Magic486/moon-miniprogram/engine"
 
 // Values
+pub fn component(String) -> Unit
+
 pub fn launch() -> Unit
 
 pub fn page(String) -> Unit

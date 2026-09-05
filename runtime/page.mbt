@@ -56,14 +56,90 @@ pub fn PageCtx::set_data(self : PageCtx, data : Json) -> Unit {
 }
 
 ///|
+/// 状态式更新（部分合并语义，推荐默认）：与当前 data 自动 diff，
+/// 只把变化的叶子路径发给 setData。
+///
+/// - 未提及的键保持不变（React setState / setData 的合并语义）
+/// - 变化的子树被展开到叶子路径（如 `"list[5]"`、`"user.name"`）
+/// - 无变化时不调用 setData（免费获得 no-op 优化）
+///
+/// ```moonbit nocheck
+/// // data: { "list": [...5 项], "total": 0 }
+/// ctx.set_state({ "total": 42 })
+/// // 实际调用 setData({ "total": 42 })
+/// ctx.set_state({ "list": [..原 6 项] })
+/// // 实际调用 setData({ "list[5]": 新项 })
+/// ```
+///
+/// 镜像永远是 `this.data`（由微信运行时维护），框架不另存状态；
+/// 与 `set_data`（补丁式透传）可混用。需要删除键时用 `replace_state`。
+pub fn PageCtx::set_state(self : PageCtx, new_state : Json) -> Unit {
+  let old : Json? = Some(@json.parse(js_data_string(self.page))) catch {
+    _ => None
+  }
+  let patch = match old {
+    Some(o) => diff_partial(o, new_state)
+    None => diff_from_scratch(new_state)
+  }
+  if patch.length() > 0 {
+    js_apply_patch(self.page, patch_to_json(patch).stringify())
+  }
+}
+
+///|
+/// 全量替换状态：与当前 data 全树 diff，未提及的键会被删除
+/// （setData 无法按键删除，删除时以父级整体覆盖实现）。
+/// 部分更新请用 `set_state`。
+pub fn PageCtx::replace_state(self : PageCtx, new_state : Json) -> Unit {
+  let old : Json? = Some(@json.parse(js_data_string(self.page))) catch {
+    _ => None
+  }
+  let patch = match old {
+    Some(o) => diff_to_paths(o, new_state)
+    None => diff_from_scratch(new_state)
+  }
+  if patch.length() > 0 {
+    js_apply_patch(self.page, patch_to_json(patch).stringify())
+  }
+}
+
+///|
 /// 读取当前 data（整体）
 pub fn PageCtx::get_data(self : PageCtx) -> Json? {
   js_get(self.page, "data").to_json()
 }
 
 ///|
+/// 组件事件桥：自定义组件向页面 triggerEvent（组件实例才有效）
+extern "js" fn js_trigger_event(
+  self_ : JsVal,
+  name : String,
+  detail : String,
+) -> Unit =
+  #|(self_, name, detail) => {
+  #|  if (self_.triggerEvent) {
+  #|    self_.triggerEvent(name, JSON.parse(detail));
+  #|  }
+  #|}
+
+///|
+/// 触发组件自定义事件（detail 为 JSON 值）
+pub fn PageCtx::trigger_event(
+  self : PageCtx,
+  name : String,
+  detail : Json,
+) -> Unit {
+  js_trigger_event(self.page, name, detail.stringify())
+}
+
+///|
 /// 页面处理器统一签名
 pub type PageHandler = (PageCtx, Payload) -> Unit
+
+///|
+/// 带返回值的处理器签名：onShareAppMessage / onShareTimeline /
+/// onPullDownRefresh(可 stopPullDownRefresh) 等需要向运行时返回值的钩子
+pub type PageReturn = (PageCtx, Payload) -> Json
 
 ///|
 /// 页面定义：path + 初始 data + 生命周期/事件处理器
@@ -78,6 +154,9 @@ pub(all) struct PageDef {
   data : Json
   /// 生命周期与事件处理器
   handlers : Array[(String, PageHandler)]
+  /// 需要向微信运行时返回 JSON 值的钩子（如 onShareAppMessage）。
+  /// 返回值经 JSON 序列化后原样交回（转发卡片等场景）。
+  returns : Array[(String, PageReturn)]
 }
 
 ///|
@@ -105,21 +184,39 @@ pub fn page_config(path : String) -> JsVal raise MpError {
     names[i] = name
     fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
   }
-  build_page_cfg(def.data.stringify(), names, fns)
+  let rnames : FixedArray[String] = FixedArray::make(def.returns.length(), "")
+  let rfns : FixedArray[(JsVal, JsVal) -> String] = FixedArray::make(
+    def.returns.length(),
+    (_, _) => "null",
+  )
+  for i, kv in def.returns {
+    let (name, h) = kv
+    rnames[i] = name
+    rfns[i] = fn(page, arg) {
+      h(PageCtx::new(page), Payload::new(arg)).stringify()
+    }
+  }
+  build_page_cfg(def.data.stringify(), names, fns, rnames, rfns)
 }
 
 ///|
-/// 构建 Page() 配置：data 解析 JSON；处理器包一层普通函数以绑定 this。
-/// 注：跨 FFI 传处理列表用平行数组，不依赖元组/结构体的内部表示。
+/// 构建 Page() 配置：data 解析 JSON；处理器包一层普通函数以绑定 this；
+/// 带返回值钩子额外解析返回的 JSON。注：跨 FFI 传处理列表用平行数组，
+/// 不依赖元组/结构体的内部表示。
 extern "js" fn build_page_cfg(
   data_json : String,
   names : FixedArray[String],
   handlers : FixedArray[(JsVal, JsVal) -> Unit],
+  return_names : FixedArray[String],
+  return_fns : FixedArray[(JsVal, JsVal) -> String],
 ) -> JsVal =
-  #|(dataJson, names, handlers) => {
+  #|(dataJson, names, handlers, rnames, rfns) => {
   #|  const cfg = { data: JSON.parse(dataJson) };
   #|  for (let i = 0; i < names.length; i++) {
   #|    cfg[names[i]] = function(arg) { handlers[i](this, arg); };
+  #|  }
+  #|  for (let i = 0; i < rnames.length; i++) {
+  #|    cfg[rnames[i]] = function(arg) { return JSON.parse(rfns[i](this, arg)); };
   #|  }
   #|  return cfg;
   #|}

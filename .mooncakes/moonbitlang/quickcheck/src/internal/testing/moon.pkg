@@ -1,0 +1,13 @@
+import {
+  "moonbitlang/quickcheck" @qc,
+  "moonbitlang/quickcheck/property",
+  "moonbitlang/quickcheck/gen",
+  "moonbitlang/core/debug",
+  "moonbitlang/quickcheck/laws",
+  "moonbitlang/quickcheck/feat",
+  "moonbitlang/core/list",
+  "moonbitlang/core/quickcheck" @coreqc,
+  "moonbitlang/core/sorted_set",
+}
+
+warnings = "+unnecessary_annotation"

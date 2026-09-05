@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitlang/quickcheck/internal/testing"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn empty_queue() -> Queue
+
+pub fn enqueue(Queue, Int) -> Queue
+
+// Errors
+
+// Types and methods
+type Queue derive(@debug.Debug)
+pub fn Queue::is_empty(Self) -> Bool
+
+// Type aliases
+
+// Traits
+

@@ -3,6 +3,8 @@
 pub(all) suberror MpError {
   /// page_config 未找到对应页面定义
   PageNotFound(String)
+  /// component_config 未找到对应组件定义
+  ComponentNotFound(String)
   /// launch 前未注册 App 定义
   AppNotRegistered
 } derive(Debug, Eq)
@@ -80,4 +82,41 @@ extern "js" fn js_app(cfg : JsVal) -> Unit =
 /// app.js 只需：`require("./engine/moon-engine.js").launch()`
 pub fn launch() -> Unit raise MpError {
   js_app(app_config())
+}
+
+///|
+/// 读取 getApp().globalData 并解析为 JSON（任何页面/组件回调中可用）
+extern "js" fn js_global_data() -> String =
+  #|() => {
+  #|  try {
+  #|    return JSON.stringify(getApp().globalData);
+  #|  } catch (err) {
+  #|    return "";
+  #|  }
+  #|}
+
+///|
+/// 读取应用全局数据（globalData）。尚未 launch 或解析失败时返回 None。
+pub fn get_global_data() -> Json? {
+  let s = js_global_data()
+  if s is "" {
+    None
+  } else {
+    Some(@json.parse(s)) catch {
+      _ => None
+    }
+  }
+}
+
+///|
+/// 覆写应用全局数据（getApp().globalData = value）
+extern "js" fn js_set_global_data(json : String) -> Unit =
+  #|(json) => {
+  #|  getApp().globalData = JSON.parse(json);
+  #|}
+
+///|
+/// 写入应用全局数据
+pub fn set_global_data(data : Json) -> Unit {
+  js_set_global_data(data.stringify())
 }

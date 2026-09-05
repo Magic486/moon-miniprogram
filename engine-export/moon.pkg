@@ -5,5 +5,7 @@ import {
 }
 
 options(
-  link: { "js": { "format": "cjs", "exports": [ "launch", "page" ] } },
+  link: {
+    "js": { "format": "cjs", "exports": [ "launch", "page", "component" ] },
+  },
 )

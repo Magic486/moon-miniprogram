@@ -10,9 +10,21 @@ pub fn app_config() -> JsVal raise MpError
 
 pub fn clear_storage() -> Unit
 
+pub fn component(String) -> Unit raise MpError
+
+pub fn component_config(String) -> JsVal raise MpError
+
 pub fn confirm(String, String, show_cancel? : Bool, on_result~ : (Bool) -> Unit) -> Unit
 
 pub fn copy_with_toast(String, tip? : String) -> Unit
+
+pub fn diff_from_scratch(Json) -> Array[(String, Json)]
+
+pub fn diff_partial(Json, Json) -> Array[(String, Json)]
+
+pub fn diff_to_paths(Json, Json) -> Array[(String, Json)]
+
+pub fn get_global_data() -> Json?
 
 pub fn get_storage(String) -> Json
 
@@ -40,9 +52,13 @@ pub fn page(String) -> Unit raise MpError
 
 pub fn page_config(String) -> JsVal raise MpError
 
+pub fn patch_to_json(Array[(String, Json)]) -> Json
+
 pub fn redirect_to(String) -> Unit
 
 pub fn register_app(AppDef) -> Unit
+
+pub fn register_component(ComponentDef) -> Unit
 
 pub fn register_page(PageDef) -> Unit
 
@@ -51,6 +67,8 @@ pub fn remove_storage(String) -> Unit
 pub fn request(String, http_method? : HttpMethod, data? : Json, (Int, Json) -> Unit, (String) -> Unit) -> Unit
 
 pub fn set_clipboard(String) -> Unit
+
+pub fn set_global_data(Json) -> Unit
 
 pub fn set_storage(String, Json) -> Unit
 
@@ -63,6 +81,7 @@ pub fn vibrate_short() -> Unit
 // Errors
 pub(all) suberror MpError {
   PageNotFound(String)
+  ComponentNotFound(String)
   AppNotRegistered
 } derive(Eq, @debug.Debug)
 
@@ -74,6 +93,14 @@ pub struct AppCtx {
 pub(all) struct AppDef {
   handlers : Array[(String, (AppCtx, Payload) -> Unit)]
   global_data : Json
+}
+
+pub(all) struct ComponentDef {
+  key : String
+  properties : Json
+  data : Json
+  handlers : Array[(String, (PageCtx, Payload) -> Unit)]
+  observers : Array[(String, (PageCtx, Payload) -> Unit)]
 }
 
 pub(all) enum HttpMethod {
@@ -96,12 +123,16 @@ pub struct PageCtx {
   // private fields
 }
 pub fn PageCtx::get_data(Self) -> Json?
+pub fn PageCtx::replace_state(Self, Json) -> Unit
 pub fn PageCtx::set_data(Self, Json) -> Unit
+pub fn PageCtx::set_state(Self, Json) -> Unit
+pub fn PageCtx::trigger_event(Self, String, Json) -> Unit
 
 pub(all) struct PageDef {
   path : String
   data : Json
   handlers : Array[(String, (PageCtx, Payload) -> Unit)]
+  returns : Array[(String, (PageCtx, Payload) -> Json)]
 }
 
 pub struct Payload {
@@ -124,6 +155,8 @@ pub(all) enum ToastIcon {
 pub type AppHandler = (AppCtx, Payload) -> Unit
 
 pub type PageHandler = (PageCtx, Payload) -> Unit
+
+pub type PageReturn = (PageCtx, Payload) -> Json
 
 // Traits
 

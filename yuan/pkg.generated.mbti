@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn from_rmb_upper(String) -> (Int64, Int) raise RmbError
+
 pub fn to_rmb_upper(String) -> String raise RmbError
 
 pub fn upper_of(Int64, Int) -> String raise RmbError

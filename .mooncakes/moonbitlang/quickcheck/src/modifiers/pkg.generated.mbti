@@ -1,0 +1,90 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitlang/quickcheck/modifiers"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/list",
+  "moonbitlang/core/quickcheck",
+  "moonbitlang/core/quickcheck/splitmix",
+  "moonbitlang/quickcheck/shrink",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct ASCIIString(String) derive(Eq)
+pub impl @debug.Debug for ASCIIString
+pub impl @quickcheck.Arbitrary for ASCIIString
+pub impl @shrink.Shrink for ASCIIString
+
+pub(all) struct Blind[T](T) derive(Eq)
+pub impl[T] @debug.Debug for Blind[T]
+pub impl[T : @quickcheck.Arbitrary] @quickcheck.Arbitrary for Blind[T]
+pub impl[T : @shrink.Shrink] @shrink.Shrink for Blind[T]
+
+pub(all) struct Negative[T](T) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for Negative[T]
+pub impl @quickcheck.Arbitrary for Negative[Int]
+pub impl @shrink.Shrink for Negative[Int]
+
+pub(all) struct NoShrink[T](T) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for NoShrink[T]
+pub impl[T : @quickcheck.Arbitrary] @quickcheck.Arbitrary for NoShrink[T]
+pub impl[T] @shrink.Shrink for NoShrink[T]
+
+pub(all) struct NonEmptyArray[T](Array[T]) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for NonEmptyArray[T]
+pub impl[T : @quickcheck.Arbitrary] @quickcheck.Arbitrary for NonEmptyArray[T]
+pub impl[T : @shrink.Shrink] @shrink.Shrink for NonEmptyArray[T]
+
+pub(all) struct NonEmptyList[T](@list.List[T]) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for NonEmptyList[T]
+pub impl[T : @quickcheck.Arbitrary] @quickcheck.Arbitrary for NonEmptyList[T]
+pub impl[T : @shrink.Shrink] @shrink.Shrink for NonEmptyList[T]
+
+pub(all) struct NonNegative[T](T) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for NonNegative[T]
+pub impl @quickcheck.Arbitrary for NonNegative[Int]
+pub impl @shrink.Shrink for NonNegative[Int]
+
+pub(all) struct NonZero[T](T) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for NonZero[T]
+pub impl @quickcheck.Arbitrary for NonZero[Int]
+pub impl @shrink.Shrink for NonZero[Int]
+
+pub(all) struct Positive[T](T) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for Positive[T]
+pub impl @quickcheck.Arbitrary for Positive[Int]
+pub impl @shrink.Shrink for Positive[Int]
+
+pub(all) struct PrintableString(String) derive(Eq)
+pub impl @debug.Debug for PrintableString
+pub impl @quickcheck.Arbitrary for PrintableString
+pub impl @shrink.Shrink for PrintableString
+
+pub(all) struct Small[T](T) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for Small[T]
+pub impl @quickcheck.Arbitrary for Small[Int]
+pub impl @shrink.Shrink for Small[Int]
+
+pub(all) struct SortedArray[T](Array[T]) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for SortedArray[T]
+pub impl[T : @quickcheck.Arbitrary + Compare] @quickcheck.Arbitrary for SortedArray[T]
+pub impl @shrink.Shrink for SortedArray[Int]
+
+pub(all) struct SortedList[T](@list.List[T]) derive(Eq)
+pub impl[T : @debug.Debug] @debug.Debug for SortedList[T]
+pub impl[T : @quickcheck.Arbitrary + Compare] @quickcheck.Arbitrary for SortedList[T]
+pub impl @shrink.Shrink for SortedList[Int]
+
+pub(all) struct UnicodeString(String) derive(Eq)
+pub impl @debug.Debug for UnicodeString
+pub impl @quickcheck.Arbitrary for UnicodeString
+pub impl @shrink.Shrink for UnicodeString
+
+// Type aliases
+
+// Traits
+

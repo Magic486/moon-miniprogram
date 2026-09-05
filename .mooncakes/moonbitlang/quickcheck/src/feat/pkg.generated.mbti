@@ -1,0 +1,83 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitlang/quickcheck/feat"
+
+import {
+  "moonbitlang/core/bigint",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/list",
+  "moonbitlang/quickcheck/gen",
+  "moonbitlang/quickcheck/internal/lazy",
+  "moonbitlang/quickcheck/internal/state",
+  "moonbitlang/quickcheck/property",
+}
+
+// Values
+pub fn[T] consts(@list.List[Enumerate[T]]) -> Enumerate[T]
+
+pub fn[T] empty() -> Enumerate[T]
+
+pub fn[T : Enumerable] feat_random(Int) -> @gen.Gen[T]
+
+pub fn[T] pay(() -> Enumerate[T]) -> Enumerate[T]
+
+pub fn[T, U] product(Enumerate[T], Enumerate[U]) -> Enumerate[(T, U)]
+
+pub fn[T] singleton(T) -> Enumerate[T]
+
+pub fn[A : Enumerable + @debug.Debug, B : @property.Testable] small_check((A) -> B, max_size? : Int, expect? : @state.Expected, abort? : Bool, verbose? : Bool) -> Unit raise Failure
+
+pub fn[A : Enumerable + @debug.Debug, B : @property.Testable] small_check_error((A) -> B raise, max_size? : Int, expect? : @state.Expected, abort? : Bool, verbose? : Bool) -> Unit raise Failure
+
+pub fn[A : Enumerable + @debug.Debug, B : @property.Testable] small_check_error_silence((A) -> B raise, max_size? : Int, expect? : @state.Expected, abort? : Bool, verbose? : Bool) -> String
+
+pub fn[A : Enumerable + @debug.Debug, B : @property.Testable] small_check_silence((A) -> B, max_size? : Int, expect? : @state.Expected, abort? : Bool, verbose? : Bool) -> String
+
+pub fn[T : Enumerable, U] unary((T) -> U) -> Enumerate[U]
+
+// Errors
+
+// Types and methods
+pub(all) struct Enumerate[T] {
+  parts : @lazy.LazyList[Finite[T]]
+}
+#alias("_[_]")
+#alias(en_index, deprecated)
+pub fn[T] Enumerate::at(Self[T], @bigint.BigInt) -> T
+pub fn[T] Enumerate::eval(Self[T]) -> @lazy.LazyList[Finite[T]]
+pub fn[T, U] Enumerate::fmap(Self[T], (T) -> U) -> Self[U]
+pub fn[T] Enumerate::sample_finite(Self[T], Int) -> Finite[T]
+pub impl[T] Add for Enumerate[T]
+
+pub(all) struct Finite[T] {
+  fCard : @bigint.BigInt
+  fIndex : (@bigint.BigInt) -> T
+}
+pub fn[T] Finite::iter(Self[T]) -> Iter[T]
+pub fn[T] Finite::to_array(Self[T]) -> (@bigint.BigInt, @list.List[T])
+pub impl[T] Add for Finite[T]
+pub impl[T : @debug.Debug] @debug.Debug for Finite[T]
+
+// Type aliases
+pub using @state {type Expected}
+
+pub using @lazy {type LazyList}
+
+pub using @property {trait Testable}
+
+// Traits
+pub(open) trait Enumerable {
+  enumerate() -> Enumerate[Self]
+}
+pub impl Enumerable for Unit
+pub impl Enumerable for Bool
+pub impl Enumerable for Byte
+pub impl Enumerable for Char
+pub impl Enumerable for Int
+pub impl Enumerable for Int64
+pub impl Enumerable for UInt
+pub impl Enumerable for UInt64
+pub impl[E : Enumerable] Enumerable for E?
+pub impl[T : Enumerable, E : Enumerable] Enumerable for Result[T, E]
+pub impl[E : Enumerable] Enumerable for @list.List[E]
+pub impl[A : Enumerable, B : Enumerable] Enumerable for (A, B)
+

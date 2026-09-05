@@ -33,6 +33,7 @@ test "page registry: register then build config" {
       ),
       ("onTap", (_ctx, _payload) => ()),
     ],
+    returns: [],
   })
   let cfg = page_config("pages/test/index")
   // data 正确进入配置对象
@@ -101,6 +102,7 @@ test "handler wrapper binds instance and payload" {
         },
       ),
     ],
+    returns: [],
   })
   let cfg = page_config("pages/bind/index")
   // 模拟微信运行时：以 fake page 为 this 调用处理器

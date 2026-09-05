@@ -28,15 +28,14 @@
   </view>
 
   <view class="samples">
-    <view class="sample-title">试一试</view>
+    <view class="sample-title">试一试（自定义组件 amount-chip）</view>
     <view class="sample-list">
-      <view
-        class="sample"
+      <amount-chip
         wx:for="{{samples}}"
         wx:key="*this"
-        data-v="{{item}}"
-        bindtap="onSample"
-      >{{item}}</view>
+        text="{{item}}"
+        bind:pick="onPick"
+      />
     </view>
   </view>
 

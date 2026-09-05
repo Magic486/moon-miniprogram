@@ -11,3 +11,8 @@ pub fn launch() -> Unit {
 pub fn page(path : String) -> Unit {
   @engine.page(path)
 }
+
+///|
+pub fn component(key : String) -> Unit {
+  @engine.component(key)
+}

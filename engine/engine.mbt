@@ -19,6 +19,7 @@ fn ensure_registered() -> Unit {
     })
     @mp.register_page(index_page())
     @mp.register_page(history_page())
+    @mp.register_component(amount_chip())
     registered.val = true
   }
 }
@@ -39,6 +40,8 @@ pub fn launch() -> Unit {
     @mp.MpError::AppNotRegistered => js_throw("moon-miniprogram: App 未注册")
     @mp.MpError::PageNotFound(p) =>
       js_throw("moon-miniprogram: 页面未注册 \{p}")
+    @mp.MpError::ComponentNotFound(k) =>
+      js_throw("moon-miniprogram: 组件未注册 \{k}")
   }
 }
 
@@ -50,6 +53,21 @@ pub fn page(path : String) -> Unit {
     @mp.MpError::AppNotRegistered => js_throw("moon-miniprogram: App 未注册")
     @mp.MpError::PageNotFound(p) =>
       js_throw("moon-miniprogram: 页面未注册 \{p}")
+    @mp.MpError::ComponentNotFound(k) =>
+      js_throw("moon-miniprogram: 组件未注册 \{k}")
+  }
+}
+
+///|
+/// 组件入口：构建并调用 Component()（由 engine-export 包装为 CJS 导出）
+pub fn component(key : String) -> Unit {
+  ensure_registered()
+  @mp.component(key) catch {
+    @mp.MpError::AppNotRegistered => js_throw("moon-miniprogram: App 未注册")
+    @mp.MpError::PageNotFound(p) =>
+      js_throw("moon-miniprogram: 页面未注册 \{p}")
+    @mp.MpError::ComponentNotFound(k) =>
+      js_throw("moon-miniprogram: 组件未注册 \{k}")
   }
 }
 
@@ -58,6 +76,37 @@ pub fn page(path : String) -> Unit {
 let samples : Array[String] = [
   "1680.32", "1006.01", "107000.53", "6007.14", "999999999999.99",
 ]
+
+///|
+/// 示范自定义组件：金额示例筹码。
+/// 展示组件模型的最小闭环：属性进入（text）→ 事件出去（pick），
+/// 页面在 WXML 里 `<amount-chip bind:pick="onPick" />` 消费。
+fn amount_chip() -> @mp.ComponentDef {
+  {
+    key: "components/amount-chip/amount-chip",
+    properties: @mp.jobj([
+      ("text", @mp.jobj([("t", @mp.jstr("String")), ("value", @mp.jstr(""))])),
+    ]),
+    data: @mp.jobj([]),
+    handlers: [
+      (
+        "onTap",
+        (ctx, _payload) => {
+          match ctx.get_data() {
+            Some(Json::Object(m)) =>
+              match m.get("text") {
+                Some(Json::String(s)) =>
+                  ctx.trigger_event("pick", @mp.jobj([("value", @mp.jstr(s))]))
+                _ => ()
+              }
+            _ => ()
+          }
+        },
+      ),
+    ],
+    observers: [],
+  }
+}
 
 ///|
 /// 首页：金额输入 → 人民币大写（实时）→ 复制 / 存历史
@@ -117,12 +166,23 @@ fn index_page() -> @mp.PageDef {
         "goHistory",
         (_ctx, _payload) => @mp.navigate_to("/pages/history/history"),
       ),
+      (
+        "onPick",
+        (ctx, payload) => {
+          match payload.string_at(["detail", "value"]) {
+            Some(v) => update_amount(ctx, v)
+            None => ()
+          }
+        },
+      ),
     ],
+    returns: [],
   }
 }
 
 ///|
-/// 输入变化：校验并实时更新大写结果
+/// 输入变化：校验并实时更新大写结果。
+/// 这里用 set_state（自动 diff 为最小路径补丁）替代 set_data 全键透传。
 fn update_amount(ctx : @mp.PageCtx, raw : String) -> Unit {
   let upper = @yuan.to_rmb_upper(raw) catch { _ => "" }
   let valid = upper != ""
@@ -133,7 +193,7 @@ fn update_amount(ctx : @mp.PageCtx, raw : String) -> Unit {
   } else {
     "金额格式不正确（支持 0 ~ 9999 亿，最多两位小数）"
   }
-  ctx.set_data(
+  ctx.set_state(
     @mp.jobj([
       ("input", @mp.jstr(raw)),
       ("upper", @mp.jstr(upper)),
@@ -178,6 +238,7 @@ fn history_page() -> @mp.PageDef {
         },
       ),
     ],
+    returns: [],
   }
 }
 
