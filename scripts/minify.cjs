@@ -17,6 +17,8 @@ const output = process.argv[3] || input.replace(/\.js$/, ".min.js");
 
 execFileSync("npx.cmd", ["--yes", "terser", input, "--compress", "--mangle", "--output", output], {
   stdio: "inherit",
+  // Node 24 起 Windows 上 spawnSync .cmd 必须显式放行 shell
+  shell: true,
 });
 
 const kb = (n) => `${(n / 1024).toFixed(1)} KB`;
