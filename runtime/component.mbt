@@ -24,6 +24,8 @@ pub(all) struct ComponentDef {
   handlers : Array[(String, PageHandler)]
   /// 数据观察器：字段变化时触发（键为 "field" / "a.b" / "a, b"）
   observers : Array[(String, PageHandler)]
+  /// 组件所在页面的生命周期（"show" / "hide" / "resize"）
+  page_lifetimes : Array[(String, PageHandler)]
 }
 
 ///|
@@ -61,6 +63,19 @@ pub fn component_config(key : String) -> JsVal raise MpError {
     onames[i] = name
     ofns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
   }
+  let pnames : FixedArray[String] = FixedArray::make(
+    def.page_lifetimes.length(),
+    "",
+  )
+  let pfns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(
+    def.page_lifetimes.length(),
+    (_, _) => (),
+  )
+  for i, kv in def.page_lifetimes {
+    let (name, h) = kv
+    pnames[i] = name
+    pfns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+  }
   js_build_component_cfg(
     def.properties.stringify(),
     def.data.stringify(),
@@ -68,12 +83,15 @@ pub fn component_config(key : String) -> JsVal raise MpError {
     fns,
     onames,
     ofns,
+    pnames,
+    pfns,
   )
 }
 
 ///|
 /// 构建 Component() 配置：properties 规范转微信格式（"t" 字符串 →
-/// 构造函数）；方法与 observers 绑定 this。平行数组传列表。
+/// 构造函数）；方法与 observers 绑定 this；pageLifetimes 组装嵌套对象。
+/// 平行数组传列表。
 extern "js" fn js_build_component_cfg(
   props_json : String,
   data_json : String,
@@ -81,8 +99,10 @@ extern "js" fn js_build_component_cfg(
   handlers : FixedArray[(JsVal, JsVal) -> Unit],
   observer_names : FixedArray[String],
   observer_fns : FixedArray[(JsVal, JsVal) -> Unit],
+  plifetime_names : FixedArray[String],
+  plifetime_fns : FixedArray[(JsVal, JsVal) -> Unit],
 ) -> JsVal =
-  #|(propsJson, dataJson, names, handlers, onames, ofns) => {
+  #|(propsJson, dataJson, names, handlers, onames, ofns, pnames, pfns) => {
   #|  const TYPES = {
   #|    String: String,
   #|    Number: Number,
@@ -116,6 +136,13 @@ extern "js" fn js_build_component_cfg(
   #|      obs[onames[i]] = function(value) { ofns[i](this, value); };
   #|    }
   #|    cfg.observers = obs;
+  #|  }
+  #|  if (pnames.length > 0) {
+  #|    const plt = {};
+  #|    for (let i = 0; i < pnames.length; i++) {
+  #|      plt[pnames[i]] = function(arg) { pfns[i](this, arg); };
+  #|    }
+  #|    cfg.pageLifetimes = plt;
   #|  }
   #|  return cfg;
   #|}

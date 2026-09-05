@@ -462,7 +462,7 @@ function _M0DTPC16result6ResultGuRP38Magic48618moon_2dminiprogram7runtime7MpErro
   this._0 = param0;
 }
 _M0DTPC16result6ResultGuRP38Magic48618moon_2dminiprogram7runtime7MpErrorE2Ok.prototype.$tag = 1;
-const _M0FP38Magic48618moon_2dminiprogram7runtime25js__build__component__cfg = (propsJson, dataJson, names, handlers, onames, ofns) => {
+const _M0FP38Magic48618moon_2dminiprogram7runtime25js__build__component__cfg = (propsJson, dataJson, names, handlers, onames, ofns, pnames, pfns) => {
   const TYPES = {
     String: String,
     Number: Number,
@@ -497,6 +497,13 @@ const _M0FP38Magic48618moon_2dminiprogram7runtime25js__build__component__cfg = (
     }
     cfg.observers = obs;
   }
+  if (pnames.length > 0) {
+    const plt = {};
+    for (let i = 0; i < pnames.length; i++) {
+      plt[pnames[i]] = function(arg) { pfns[i](this, arg); };
+    }
+    cfg.pageLifetimes = plt;
+  }
   return cfg;
 };
 const _M0FP38Magic48618moon_2dminiprogram7runtime13js__component = (cfg) => Component(cfg);
@@ -527,12 +534,13 @@ function _M0DTPC16result6ResultGsRP38Magic48618moon_2dminiprogram4yuan8RmbErrorE
   this._0 = param0;
 }
 _M0DTPC16result6ResultGsRP38Magic48618moon_2dminiprogram4yuan8RmbErrorE2Ok.prototype.$tag = 1;
-function _M0TP38Magic48618moon_2dminiprogram7runtime12ComponentDef(param0, param1, param2, param3, param4) {
+function _M0TP38Magic48618moon_2dminiprogram7runtime12ComponentDef(param0, param1, param2, param3, param4, param5) {
   this.key = param0;
   this.properties = param1;
   this.data = param2;
   this.handlers = param3;
   this.observers = param4;
+  this.page_lifetimes = param5;
 }
 function _M0TP38Magic48618moon_2dminiprogram7runtime7PageDef(param0, param1, param2, param3) {
   this.path = param0;
@@ -5388,7 +5396,31 @@ function _M0FP38Magic48618moon_2dminiprogram7runtime17component__config(key) {
         break;
       }
     }
-    return new _M0DTPC16result6ResultGRP38Magic48618moon_2dminiprogram7runtime5JsValRP38Magic48618moon_2dminiprogram7runtime7MpErrorE2Ok(_M0FP38Magic48618moon_2dminiprogram7runtime25js__build__component__cfg(_M0MPC14json4Json17stringify_2einner(_def.properties, false, 0, undefined), _M0MPC14json4Json17stringify_2einner(_def.data, false, 0, undefined), names, fns, onames, ofns));
+    const pnames = $make_array_len_and_init(_def.page_lifetimes.length, "");
+    const pfns = $make_array_len_and_init(_def.page_lifetimes.length, (_discard_, _discard_$2) => {
+    });
+    const _bind$8 = _def.page_lifetimes;
+    const _bind$9 = _bind$8.length;
+    let _tmp$3 = 0;
+    while (true) {
+      const i = _tmp$3;
+      if (i < _bind$9) {
+        const kv = _bind$8[i];
+        const _name = kv._0;
+        const _h = kv._1;
+        $bound_check(pnames, i);
+        pnames[i] = _name;
+        $bound_check(pfns, i);
+        pfns[i] = (page, arg) => {
+          _h(_M0MP38Magic48618moon_2dminiprogram7runtime7PageCtx3new(page), _M0MP38Magic48618moon_2dminiprogram7runtime7Payload3new(arg));
+        };
+        _tmp$3 = i + 1 | 0;
+        continue;
+      } else {
+        break;
+      }
+    }
+    return new _M0DTPC16result6ResultGRP38Magic48618moon_2dminiprogram7runtime5JsValRP38Magic48618moon_2dminiprogram7runtime7MpErrorE2Ok(_M0FP38Magic48618moon_2dminiprogram7runtime25js__build__component__cfg(_M0MPC14json4Json17stringify_2einner(_def.properties, false, 0, undefined), _M0MPC14json4Json17stringify_2einner(_def.data, false, 0, undefined), names, fns, onames, ofns, pnames, pfns));
   }
 }
 function _M0FP38Magic48618moon_2dminiprogram7runtime9component(key) {
@@ -5782,7 +5814,7 @@ function _M0FP38Magic48618moon_2dminiprogram6engine12amount__chip() {
         return;
       }
     }
-  } }], []);
+  } }], [], []);
 }
 function _M0FP38Magic48618moon_2dminiprogram6engine13load__history() {
   const h = _M0FP38Magic48618moon_2dminiprogram7runtime12get__storage("rmb_history");

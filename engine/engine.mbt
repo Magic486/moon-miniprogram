@@ -105,6 +105,7 @@ fn amount_chip() -> @mp.ComponentDef {
       ),
     ],
     observers: [],
+    page_lifetimes: [],
   }
 }
 

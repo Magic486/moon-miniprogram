@@ -98,6 +98,16 @@ ctx.set_state({ "list": [..原列表, 新项], "total": 42 })
 - `set_data`：补丁式透传（等价 this.setData）
 - 镜像永远是 `this.data`（微信运行时维护），框架不另存状态——**diff 引擎是纯函数 `diff_to_paths`/`diff_partial`，12 组黄金测试覆盖**
 
+**实测传输量**（快照测试 `runtime/bench_test.mbt` 持续回归，数字为 setData JSON 字节数）：
+
+| 场景 | set_state 补丁 | 全量 setData | 缩减 |
+|---|---|---|---|
+| 1000 项清单追加 1 项 | **49 B** | 34,959 B | **~713×** |
+| 深层对象改一个叶子 | 24 B | 75 B | 3× |
+| 数据无变化 | **0 B**（不调用 setData） | 75 B | — |
+| 1000 项头部删除 1 项 | 34,895 B | 34,895 B | 1×（最坏情况，如实报告） |
+| 追加 100 项 | 4,815 B | 38,438 B | 8× |
+
 ### 自定义组件模型
 
 ```moonbit
@@ -171,10 +181,13 @@ properties 用 JSON 规范描述（`"t": "String"` 由 JS 桥翻译为构造函�
 
 | 层 | 命令 | 覆盖 |
 |---|---|---|
-| 单元 | `moon test` | **37 个测试**：diff 引擎 12 组黄金用例、runtime 桥 8、yuan 规范用例 15 |
+| 单元 | `moon test` | **41 个测试**：diff 引擎 12 组黄金用例 + 200 轮随机不变式（LCG 可复现）、runtime 桥 11、yuan 规范用例 15 |
 | 属性 | `moonbitlang/quickcheck` | 大写↔数值随机往返不变式 + 解析输出闭合性 |
-| 冒烟 | `node scripts/smoke.js` | node 模拟微信运行时（App/Page/Component/wx/storage + 路径感知 setData），**端到端 25 项断言** |
+| 冒烟 | `node scripts/smoke.js` | node 模拟微信运行时（`scripts/sim/wx-sim.js`，**可复用**：App/Page/Component/wx/storage + 路径感知 setData + 调用记录），**端到端 25 项断言** |
 | 验收 | 微信开发者工具 | UI 与真机交互 |
+
+> `sim/wx-sim.js` 是框架自带的测试基建：给月球上任何 MoonBit 小程序项目写无头测试，
+> `createWxSim()` 一行接入，`sim.calls` 记录全部 wx 调用供断言。
 
 ```bash
 moon test                              # 37/37 绿（含 2 个属性测试）
