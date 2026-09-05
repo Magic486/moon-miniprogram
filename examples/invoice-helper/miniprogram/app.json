@@ -1,0 +1,13 @@
+{
+  "pages": ["pages/index/index", "pages/history/history"],
+  "window": {
+    "navigationBarBackgroundColor": "#B4232C",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "发票助手",
+    "backgroundColor": "#F6F5F2",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

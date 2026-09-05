@@ -1,0 +1,129 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Magic486/moon-miniprogram/runtime"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn app_config() -> JsVal raise MpError
+
+pub fn clear_storage() -> Unit
+
+pub fn confirm(String, String, show_cancel? : Bool, on_result~ : (Bool) -> Unit) -> Unit
+
+pub fn copy_with_toast(String, tip? : String) -> Unit
+
+pub fn get_storage(String) -> Json
+
+pub fn hide_toast() -> Unit
+
+pub fn jarr(Array[Json]) -> Json
+
+pub fn jbool(Bool) -> Json
+
+pub fn jint(Int) -> Json
+
+pub fn jnum(Double) -> Json
+
+pub fn jobj(Array[(String, Json)]) -> Json
+
+pub fn jstr(String) -> Json
+
+pub fn launch() -> Unit raise MpError
+
+pub fn navigate_back(delta? : Int) -> Unit
+
+pub fn navigate_to(String) -> Unit
+
+pub fn page(String) -> Unit raise MpError
+
+pub fn page_config(String) -> JsVal raise MpError
+
+pub fn redirect_to(String) -> Unit
+
+pub fn register_app(AppDef) -> Unit
+
+pub fn register_page(PageDef) -> Unit
+
+pub fn remove_storage(String) -> Unit
+
+pub fn request(String, http_method? : HttpMethod, data? : Json, (Int, Json) -> Unit, (String) -> Unit) -> Unit
+
+pub fn set_clipboard(String) -> Unit
+
+pub fn set_storage(String, Json) -> Unit
+
+pub fn switch_tab(String) -> Unit
+
+pub fn toast(String, icon? : ToastIcon, mask? : Bool, duration? : Int) -> Unit
+
+pub fn vibrate_short() -> Unit
+
+// Errors
+pub(all) suberror MpError {
+  PageNotFound(String)
+  AppNotRegistered
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+pub struct AppCtx {
+  // private fields
+}
+
+pub(all) struct AppDef {
+  handlers : Array[(String, (AppCtx, Payload) -> Unit)]
+  global_data : Json
+}
+
+pub(all) enum HttpMethod {
+  Get
+  Post
+  Put
+  Delete
+  Head
+  Options
+} derive(Eq, @debug.Debug)
+
+#external
+pub type JsVal
+pub fn JsVal::at(Self, Array[String]) -> Self?
+pub fn JsVal::number_at(Self, Array[String]) -> Double?
+pub fn JsVal::string_at(Self, Array[String]) -> String?
+pub fn JsVal::to_json(Self) -> Json?
+
+pub struct PageCtx {
+  // private fields
+}
+pub fn PageCtx::get_data(Self) -> Json?
+pub fn PageCtx::set_data(Self, Json) -> Unit
+
+pub(all) struct PageDef {
+  path : String
+  data : Json
+  handlers : Array[(String, (PageCtx, Payload) -> Unit)]
+}
+
+pub struct Payload {
+  // private fields
+}
+pub fn Payload::json(Self) -> Json?
+pub fn Payload::new(JsVal) -> Self
+pub fn Payload::number_at(Self, Array[String]) -> Double?
+pub fn Payload::raw(Self) -> JsVal
+pub fn Payload::string_at(Self, Array[String]) -> String?
+
+pub(all) enum ToastIcon {
+  Success
+  Error
+  Loading
+  Plain
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+pub type AppHandler = (AppCtx, Payload) -> Unit
+
+pub type PageHandler = (PageCtx, Payload) -> Unit
+
+// Traits
+

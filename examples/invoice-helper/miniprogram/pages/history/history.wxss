@@ -1,0 +1,77 @@
+.page {
+  min-height: 100vh;
+  padding: 30rpx 32rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10rpx 6rpx 26rpx;
+}
+
+.head-title {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.head-clear {
+  font-size: 26rpx;
+  color: #8A94A6;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  background: #fff;
+  border: 1rpx solid #EDEFF3;
+}
+
+.head-clear:active {
+  color: #B4232C;
+}
+
+.empty {
+  text-align: center;
+  padding-top: 180rpx;
+}
+
+.empty-icon {
+  font-size: 90rpx;
+}
+
+.empty-text {
+  margin-top: 24rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #4B5563;
+}
+
+.empty-sub {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #A6ADBB;
+}
+
+.item {
+  background: #fff;
+  border-radius: 22rpx;
+  padding: 30rpx 32rpx;
+  margin-bottom: 22rpx;
+  box-shadow: 0 6rpx 24rpx rgba(31, 41, 51, 0.05);
+}
+
+.item:active {
+  background: #FDF0EF;
+}
+
+.item-upper {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2933;
+  letter-spacing: 1rpx;
+}
+
+.item-input {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #A6ADBB;
+}

@@ -1,0 +1,9 @@
+pkgtype(kind: "foreign_library")
+
+import {
+  "Magic486/moon-miniprogram/engine",
+}
+
+options(
+  link: { "js": { "format": "cjs", "exports": [ "launch", "page" ] } },
+)
