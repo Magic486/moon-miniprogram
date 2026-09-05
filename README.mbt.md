@@ -78,7 +78,7 @@ WXML 照常写：`bindtap="onTap"` 直接命中 MoonBit 里注册的同名处理
 ### 0 秒开新项目（脚手架）
 
 ```bash
-node scripts/new.mjs myshop    # 生成完整骨架：engine + 导出层 + miniprogram 壳
+node scripts/new.cjs myshop    # 生成完整骨架：engine + 导出层 + miniprogram 壳
 ```
 
 ## 框架能力
@@ -202,7 +202,8 @@ moon-miniprogram/
 ├── engine/           # 示范应用业务（可单测）
 ├── engine-export/    # CJS 导出包装（foreign_library）
 ├── examples/invoice-helper/   # 微信开发者工具打开的示范项目
-├── scripts/          # build-example.ps1 + smoke.js（无头冒烟）+ new.mjs（脚手架）
+├── docs/参赛说明.md  # 参赛材料草稿
+├── scripts/          # build-example.ps1 + smoke.js（无头冒烟）+ new.cjs（脚手架）
 └── moon.mod
 ```
 
@@ -224,7 +225,7 @@ git clone https://github.com/Magic486/moon-miniprogram
 cd moon-miniprogram
 moon test
 powershell scripts/build-example.ps1
-node scripts/new.mjs myapp && cd myapp && moon test   # 体验脚手架
+node scripts/new.cjs myapp && cd myapp && moon test   # 体验脚手架
 # 微信开发者工具打开 examples/invoice-helper/
 ```
 

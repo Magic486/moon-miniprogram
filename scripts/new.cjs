@@ -60,6 +60,19 @@ files.set(
   "engine/engine.mbt",
   `///|
 /// ${name} 业务逻辑：页面定义全部在此（可 moon test 单测）
+
+///|
+/// 纯函数业务逻辑：计数 +1（独立可测，不依赖微信运行时）
+fn bump(n : Double) -> Double {
+  n + 1.0
+}
+
+///|
+test "bump: 点击计数 +1" {
+  inspect(bump(41.0), content="42")
+}
+
+///|
 let counter_page : @mp.PageDef = {
   path: "pages/index/index",
   data: @mp.jobj([
@@ -73,10 +86,10 @@ let counter_page : @mp.PageDef = {
         let n = match ctx.get_data() {
           Some(Json::Object(m)) =>
             match m.get("count") {
-              Some(Json::Number(d, ..)) => d + 1.0
-              _ => 1.0
+              Some(Json::Number(d, ..)) => bump(d)
+              _ => bump(0.0)
             }
-          _ => 1.0
+          _ => bump(0.0)
         }
         // 自动 diff：实际 setData 只包含变化的路径
         ctx.set_state(@mp.jobj([("count", @mp.jnum(n))]))
