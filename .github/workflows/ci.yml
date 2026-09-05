@@ -30,8 +30,33 @@ jobs:
         run: moon build --target js --release
 
       - name: Headless smoke test (simulated WeChat runtime)
+        run: node scripts/smoke.js _build/js/release/build/engine-export/engine-export.js
+
+  scaffold-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install MoonBit toolchain
         run: |
-          mkdir -p examples/invoice-helper/miniprogram/engine
-          cp _build/js/release/build/engine-export/engine-export.js \
-             examples/invoice-helper/miniprogram/engine/moon-engine.js
-          node scripts/smoke.js examples/invoice-helper/miniprogram/engine/moon-engine.js
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: Scaffold a new project
+        run: node scripts/new.cjs demo
+
+      - name: mmp check & test in generated project
+        working-directory: demo
+        run: |
+          node mmp.cjs check
+          node mmp.cjs test
+
+      - name: mmp build copies artifact into miniprogram shell
+        working-directory: demo
+        run: |
+          node mmp.cjs build
+          test -f miniprogram/engine/moon-engine.js

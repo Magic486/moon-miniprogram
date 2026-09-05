@@ -2,6 +2,17 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.3.3] - 2026-09-06
+
+### Added（一键 CLI mmp.cjs）
+- **`scripts/mmp.cjs`**：零依赖开发 CLI——`check` / `test` / `build`（debug 构建 +
+  拷贝到 miniprogram/engine/moon-engine.js）/ `dev`（watch .mbt 自动重编译，去抖 250ms）/
+  `release`（release 构建 + 拷贝）。仓库与每个脚手架项目自带。
+- 脚手架 `new.cjs` 自动复制 mmp.cjs 进生成项目，模板 README 改为 mmp 工作流；
+  依赖版本对齐 @0.3.3。
+- **CI 修复与扩展**：smoke 改测 _build 产物（此前遗留 examples 删除后失效路径），
+  新增 scaffold-e2e job（new → mmp check/test/build → 产物存在性断言）。
+
 ## [0.3.2] - 2026-09-06
 
 ### Added（声明式路由）

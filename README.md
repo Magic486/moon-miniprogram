@@ -56,7 +56,18 @@ node scripts/minify.cjs <engine-export.js> # 233 KB → 134 KB（terser）
 ```
 
 **开新项目**：`node scripts/new.cjs myapp` —— 生成完整骨架（业务包 + 导出层 +
-小程序壳 + 示例测试），生成的项目直接从 mooncakes 拉取本框架编译。
+小程序壳 + 示例测试 + **一键 CLI `mmp.cjs`**），生成的项目直接从 mooncakes
+拉取本框架编译。
+
+**一键 CLI（仓库与每个脚手架项目自带 `mmp.cjs`）**：
+
+```bash
+node mmp.cjs check     # 类型检查
+node mmp.cjs test      # 业务单测（无需微信工具）
+node mmp.cjs build     # 构建并拷贝产物到 miniprogram/engine/
+node mmp.cjs dev       # watch：.mbt 变更自动重编译（微信开发者工具配合刷新）
+node mmp.cjs release   # release 构建 + 拷贝（发布用）
+```
 
 ## 核心能力
 

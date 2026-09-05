@@ -38,7 +38,7 @@ license = "Apache-2.0"
 keywords = [ "miniprogram", "wechat" ]
 
 import {
-  "${FW}@0.2.0"
+  "${FW}@0.3.3"
 }
 
 preferred_target = "js"
@@ -257,16 +257,18 @@ files.set(
 
 由 [moon-miniprogram](https://github.com/Magic486/moon-miniprogram) 脚手架生成的 MoonBit 微信小程序。
 
-## 开发
+## 开发（一键 CLI mmp.cjs）
 
 \`\`\`bash
-moon test                 # 业务逻辑单测
-moon build --target js --release
-cp _build/js/release/build/engine-export/engine-export.js miniprogram/engine/moon-engine.js
-# 微信开发者工具打开 miniprogram/
+node mmp.cjs check     # 类型检查
+node mmp.cjs test      # 业务逻辑单测（无需微信工具）
+node mmp.cjs build     # 构建并拷贝产物到 miniprogram/engine/
+node mmp.cjs dev       # watch：.mbt 变更自动重编译（微信开发者工具配合刷新）
+node mmp.cjs release   # release 构建 + 拷贝（发布用）
 \`\`\`
 
 业务逻辑全部在 \`engine/engine.mbt\`，页面 JS 只有一行装配代码。
+微信开发者工具（测试号即可）打开 \`miniprogram/\` 即可运行。
 `,
 );
 
@@ -276,10 +278,13 @@ for (const [rel, content] of files) {
   fs.writeFileSync(abs, content, "utf8");
 }
 fs.mkdirSync(path.join(root, "miniprogram", "engine"), { recursive: true });
+// 一键 CLI（同目录的 mmp.cjs）复制进生成项目
+fs.copyFileSync(path.join(__dirname, "mmp.cjs"), path.join(root, "mmp.cjs"));
 
 console.log(`created ${name}/`);
 console.log("next steps:");
 console.log(`  cd ${name}`);
-console.log("  moon test");
-console.log("  moon build --target js --release");
-console.log("  # 复制产物后用微信开发者工具打开 miniprogram/");
+console.log("  node mmp.cjs test     # 业务单测（无需微信工具）");
+console.log("  node mmp.cjs build    # 构建并拷贝产物到 miniprogram/engine/");
+console.log("  node mmp.cjs dev      # watch：.mbt 变更自动重编译");
+console.log("  # 微信开发者工具打开 miniprogram/");
