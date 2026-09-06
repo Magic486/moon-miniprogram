@@ -46,9 +46,10 @@ function createWxSim() {
   const noopApis = [
     "showToast", "hideToast", "showModal", "setClipboardData",
     "redirectTo", "switchTab", "navigateBack",
-    "vibrateShort", "showLoading", "hideLoading",
+    "vibrateShort", "vibrateLong", "showLoading", "hideLoading",
     "stopPullDownRefresh", "setNavigationBarTitle", "pageScrollTo",
-    "makePhoneCall",
+    "makePhoneCall", "showNavigationBarLoading", "hideNavigationBarLoading",
+    "setNavigationBarColor", "setScreenBrightness", "setKeepScreenOn",
   ];
   for (const name of noopApis) {
     wx[name] = () => sim.calls.push(name);

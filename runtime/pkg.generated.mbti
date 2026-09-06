@@ -22,17 +22,37 @@ pub fn copy_with_toast(String, tip? : String) -> Unit
 
 pub fn create_store(String, Json) -> Store
 
+pub fn detect_platform() -> MiniPlatform
+
 pub fn diff_from_scratch(Json) -> Array[(String, Json)]
 
 pub fn diff_partial(Json, Json) -> Array[(String, Json)]
 
 pub fn diff_to_paths(Json, Json) -> Array[(String, Json)]
 
+pub fn download_file(String, on_result~ : (String) -> Unit) -> Unit
+
+pub fn favorite_card(String, query? : String, image_url? : String) -> Json
+
+pub fn get_battery_info(on_result~ : (Int) -> Unit) -> Unit
+
+pub fn get_clipboard_data(on_result~ : (String) -> Unit) -> Unit
+
 pub fn get_global_data() -> Json?
+
+pub fn get_image_info(String, on_result~ : (Int, Int) -> Unit) -> Unit
+
+pub fn get_location(on_result~ : (Json) -> Unit) -> Unit
+
+pub fn get_network_type(on_result~ : (String) -> Unit) -> Unit
+
+pub fn get_screen_brightness(on_result~ : (Double) -> Unit) -> Unit
 
 pub fn get_storage(String) -> Json
 
 pub fn hide_loading() -> Unit
+
+pub fn hide_nav_bar_loading() -> Unit
 
 pub fn hide_toast() -> Unit
 
@@ -48,7 +68,11 @@ pub fn jobj(Array[(String, Json)]) -> Json
 
 pub fn jstr(String) -> Json
 
+pub fn keep_screen_on() -> Unit
+
 pub fn launch() -> Unit raise MpError
+
+pub fn login(on_result~ : (String) -> Unit) -> Unit
 
 pub fn make_phone_call(String) -> Unit
 
@@ -94,13 +118,19 @@ pub fn route_registered(String) -> Bool
 
 pub fn route_url(String, Array[(String, Json)]) -> String
 
+pub fn save_image_to_album(String, on_ok? : () -> Unit, on_fail? : () -> Unit) -> Unit
+
 pub fn scan_code(on_result~ : (String) -> Unit) -> Unit
 
 pub fn set_clipboard(String) -> Unit
 
 pub fn set_global_data(Json) -> Unit
 
+pub fn set_nav_bar_color(String, String) -> Unit
+
 pub fn set_nav_title(String) -> Unit
+
+pub fn set_screen_brightness(Double) -> Unit
 
 pub fn set_storage(String, Json) -> Unit
 
@@ -110,6 +140,8 @@ pub fn show_action_sheet(Array[String], on_result~ : (Int?) -> Unit, title? : St
 
 pub fn show_loading(String, mask? : Bool) -> Unit
 
+pub fn show_nav_bar_loading() -> Unit
+
 pub fn stop_pull_down_refresh() -> Unit
 
 pub fn switch_tab(String) -> Unit
@@ -118,7 +150,11 @@ pub fn switch_tab_route(String) -> Unit
 
 pub fn system_info() -> Json
 
+pub fn timeline_card(String, query? : String, image_url? : String) -> Json
+
 pub fn toast(String, icon? : ToastIcon, mask? : Bool, duration? : Int) -> Unit
+
+pub fn vibrate_long() -> Unit
 
 pub fn vibrate_short() -> Unit
 
@@ -163,6 +199,13 @@ pub fn JsVal::at(Self, Array[String]) -> Self?
 pub fn JsVal::number_at(Self, Array[String]) -> Double?
 pub fn JsVal::string_at(Self, Array[String]) -> String?
 pub fn JsVal::to_json(Self) -> Json?
+
+pub(all) enum MiniPlatform {
+  Wechat
+  Alipay
+  Douyin
+  Other
+} derive(Eq, @debug.Debug)
 
 pub struct PageCtx {
   // private fields

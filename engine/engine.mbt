@@ -208,6 +208,15 @@ fn about_page() -> @mp.PageDef {
           )
         },
       ),
+      // 朋友圈 / 收藏钩子：returns 可放任意需要向微信返回对象的钩子
+      (
+        "onShareTimeline",
+        (_ctx, _payload) => @mp.timeline_card("moon-miniprogram"),
+      ),
+      (
+        "onAddToFavorites",
+        (_ctx, _payload) => @mp.favorite_card("moon-miniprogram"),
+      ),
     ],
   }
 }

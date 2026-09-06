@@ -2,6 +2,28 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.4.0] - 2026-09-06
+
+### Added（攻下"还不能"边界）
+- **returns 钩子族补全**：`timeline_card`（onShareTimeline 朋友圈）、
+  `favorite_card`（onAddToFavorites 收藏），`PageDef.returns` 可放任意带返回
+  值钩子（fixture 三钩子 + 冒烟断言）。
+- **wx 扩展绑定**（`runtime/wx_extra.mbt`，+15）：设备（get_clipboard_data /
+  get_network_type / get_battery_info / 屏幕亮度读写 / keep_screen_on /
+  vibrate_long）、界面（导航栏 loading ×2 / set_nav_bar_color）、媒体
+  （get_image_info / save_image_to_album）、文件（download_file）、位置
+  （get_location）、开放（login）。**统一约定：异步回调在无 wx/失败时必达
+  fallback**。
+- **平台适配层起点**（`runtime/platform.mbt`）：`MiniPlatform` 枚举 +
+  `detect_platform()`（wx/my/tt 全局探测，无全局 → Other）。
+- **跨端设计文档**：[docs/rfc/0001-平台适配设计.md](docs/rfc/0001-平台适配设计.md)
+  ——平台差异点分析 + 三明治架构 + 分阶段路线，诚实标注实现状态。
+- **组件生态示例**：使用指南补"组件四件套可抄模板"，说明组件包如何长出生态。
+- 单测 +4（returns 卡片 / wx_extra 降级 / platform 探测与枚举）。
+
+### Changed
+- 使用指南 wx API 参考新增"扩展绑定"节；README 路线图/结构同步；37 单测 + 38 冒烟。
+
 ## [0.3.4] - 2026-09-06
 
 ### Added（错误边界 + API 覆盖）

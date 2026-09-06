@@ -123,6 +123,11 @@ check("about onShareAppMessage bound", typeof ab.onShareAppMessage === "function
 const share = ab.onShareAppMessage.call(sim.makeInstance(ab.data), {});
 check("share title", share.title, "moon-miniprogram · 用 MoonBit 写小程序");
 check("share path", share.path, "pages/index/index");
+// 多 returns 钩子：朋友圈与收藏卡片同样经 JSON 返回
+const tl = ab.onShareTimeline.call(sim.makeInstance(ab.data));
+check("timeline hook returns title", tl.title, "moon-miniprogram");
+const fav = ab.onAddToFavorites.call(sim.makeInstance(ab.data));
+check("favorite hook returns title", fav.title, "moon-miniprogram");
 
 // ---- 错误路径：未注册的 page/component 应抛错 ----
 let threw = false;

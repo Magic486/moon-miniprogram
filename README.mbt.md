@@ -4,7 +4,7 @@
 > 可属性测试；编译产物是一个 CommonJS 模块，页面 JS 只剩一行装配代码。
 
 ![version](https://img.shields.io/badge/version-0.3.5-blue)
-![tests](https://img.shields.io/badge/tests-33%20unit%20%E2%9C%93%20%7C%2036%20smoke%20%E2%9C%93-green)
+![tests](https://img.shields.io/badge/tests-37%20unit%20%E2%9C%93%20%7C%2038%20smoke%20%E2%9C%93-green)
 ![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)
 ![moon](https://img.shields.io/badge/MoonBit-js%20backend-orange)
 
@@ -136,8 +136,8 @@ let counter_page : @mp.PageDef = {
 三层，全部无头优先，任何提交前必须全绿：
 
 ```bash
-moon test                              # 33 个单测（含 200 轮随机不变式）
-powershell scripts/build-example.ps1   # 构建 + 36 项端到端冒烟（node 模拟微信运行时）
+moon test                              # 37 个单测（含 200 轮随机不变式）
+powershell scripts/build-example.ps1   # 构建 + 38 项端到端冒烟（node 模拟微信运行时）
 ```
 
 `scripts/sim/wx-sim.js` 是对外可复用的**微信运行时模拟器**：App/Page/Component/wx/storage
@@ -157,11 +157,12 @@ powershell scripts/build-example.ps1   # 构建 + 36 项端到端冒烟（node �
 ## 仓库结构
 
 ```text
-runtime/          框架核心：Page/App/Component 模型、diff 引擎、store、router、wx 绑定
+runtime/          框架核心：Page/App/Component 模型、diff 引擎、store、router、
+                  wx 绑定 + 扩展绑定、平台探测（platform.mbt）
 engine/           最小示例 fixture（counter + about + tag，冒烟宿主，无业务）
 engine-export/    CJS 导出包装（foreign_library）
 scripts/          new.cjs 脚手架 · mmp.cjs 一键 CLI · sim/wx-sim.js 模拟器 · smoke.js · minify.cjs
-docs/             使用指南 + 参赛说明
+docs/             使用指南 · 参赛说明 · rfc/（平台适配设计）
 moon.mod          包定义（mooncakes 发布入口）
 ```
 
@@ -179,10 +180,10 @@ moon.mod          包定义（mooncakes 发布入口）
 
 **规划中**
 
+- [ ] 平台适配实现（支付宝/抖音——设计已完成：[RFC 0001](docs/rfc/0001-平台适配设计.md) + 平台探测）
 - [ ] 分包 / 独立分包支持
-- [ ] 类型化 storage key + 路由参数的反序列化助手
-- [ ] 平台插件化（对标 Taro：weapp / 支付宝 / 抖音…）
-- [ ] 基础组件/UI 库与物料市场
+- [ ] 类型化 storage key + 路由参数反序列化助手
+- [ ] 组件/UI 物料包（组件生态：定义四件套见[使用指南](docs/使用指南.md#自定义组件)）
 
 ## 参与
 

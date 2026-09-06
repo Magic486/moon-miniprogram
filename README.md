@@ -157,11 +157,12 @@ powershell scripts/build-example.ps1   # 构建 + 36 项端到端冒烟（node �
 ## 仓库结构
 
 ```text
-runtime/          框架核心：Page/App/Component 模型、diff 引擎、store、router、wx 绑定
+runtime/          框架核心：Page/App/Component 模型、diff 引擎、store、router、
+                  wx 绑定 + 扩展绑定、平台探测（platform.mbt）
 engine/           最小示例 fixture（counter + about + tag，冒烟宿主，无业务）
 engine-export/    CJS 导出包装（foreign_library）
 scripts/          new.cjs 脚手架 · mmp.cjs 一键 CLI · sim/wx-sim.js 模拟器 · smoke.js · minify.cjs
-docs/             使用指南 + 参赛说明
+docs/             使用指南 · 参赛说明 · rfc/（平台适配设计）
 moon.mod          包定义（mooncakes 发布入口）
 ```
 
@@ -179,10 +180,10 @@ moon.mod          包定义（mooncakes 发布入口）
 
 **规划中**
 
+- [ ] 平台适配实现（支付宝/抖音——设计已完成：[RFC 0001](docs/rfc/0001-平台适配设计.md) + 平台探测）
 - [ ] 分包 / 独立分包支持
-- [ ] 类型化 storage key + 路由参数的反序列化助手
-- [ ] 平台插件化（对标 Taro：weapp / 支付宝 / 抖音…）
-- [ ] 基础组件/UI 库与物料市场
+- [ ] 类型化 storage key + 路由参数反序列化助手
+- [ ] 组件/UI 物料包（组件生态：定义四件套见[使用指南](docs/使用指南.md#自定义组件)）
 
 ## 参与
 

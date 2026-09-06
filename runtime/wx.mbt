@@ -295,6 +295,42 @@ extern "js" fn wx_choose_image(
   #|})
 
 ///|
+/// 构造 onShareTimeline 返回的朋友圈卡片内容
+/// （用于 PageDef.returns：("onShareTimeline", (_, _) => timeline_card(...))）
+pub fn timeline_card(
+  title : String,
+  query? : String = "",
+  image_url? : String = "",
+) -> Json {
+  let fields : Array[(String, Json)] = [("title", jstr(title))]
+  if query != "" {
+    fields.push(("query", jstr(query)))
+  }
+  if image_url != "" {
+    fields.push(("imageUrl", jstr(image_url)))
+  }
+  jobj(fields)
+}
+
+///|
+/// 构造 onAddToFavorites 返回的收藏卡片内容
+/// （用于 PageDef.returns：("onAddToFavorites", (_, _) => favorite_card(...))）
+pub fn favorite_card(
+  title : String,
+  query? : String = "",
+  image_url? : String = "",
+) -> Json {
+  let fields : Array[(String, Json)] = [("title", jstr(title))]
+  if query != "" {
+    fields.push(("query", jstr(query)))
+  }
+  if image_url != "" {
+    fields.push(("imageUrl", jstr(image_url)))
+  }
+  jobj(fields)
+}
+
+///|
 /// 构造 onShareAppMessage 返回的转发卡片内容
 /// （用于 PageDef.returns：("onShareAppMessage", (_, _) => share_card(...))）
 pub fn share_card(
@@ -357,15 +393,10 @@ extern "js" fn wx_system_info() -> JsVal =
 ///|
 /// 预览图片：urls 为图片地址列表，current 为当前显示（默认首张）
 pub fn preview_image(urls : Array[String], current? : String = "") -> Unit {
-  let cur = if current == "" {
-    urls[0]
-  } else {
-    current
-  }
+  let cur = if current == "" { urls[0] } else { current }
   wx_call(
     "previewImage",
-    jobj([("urls", jarr(urls.map(fn(u) { jstr(u) }))), ("current", jstr(cur))])
-      .stringify(),
+    jobj([("urls", jarr(urls.map(fn(u) { jstr(u) }))), ("current", jstr(cur))]).stringify(),
   )
 }
 
