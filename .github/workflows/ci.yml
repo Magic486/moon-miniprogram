@@ -49,6 +49,10 @@ jobs:
       - name: Scaffold a new project
         run: node scripts/new.cjs demo
 
+      - name: Refresh mooncakes registry index (new project fetches framework)
+        working-directory: demo
+        run: moon update
+
       - name: mmp check & test in generated project
         working-directory: demo
         run: |

@@ -38,7 +38,7 @@ license = "Apache-2.0"
 keywords = [ "miniprogram", "wechat" ]
 
 import {
-  "${FW}@0.3.3"
+  "${FW}@0.4.0"
 }
 
 preferred_target = "js"

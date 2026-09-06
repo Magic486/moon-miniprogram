@@ -1,6 +1,6 @@
 name = "Magic486/moon-miniprogram"
 
-version = "0.4.0"
+version = "0.4.1"
 
 readme = "README.mbt.md"
 
@@ -12,4 +12,4 @@ keywords = [ "miniprogram", "wechat", "weapp", "wxml", "framework" ]
 
 preferred_target = "js"
 
-description = "用 MoonBit 编写微信小程序：类型安全运行时 + 页面模型 + wx API 绑定"
+description = "MoonBit 微信小程序开发框架：类型安全运行时、状态自动 diff、跨页 store、声明式路由与无头测试基建"
