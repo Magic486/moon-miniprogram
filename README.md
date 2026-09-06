@@ -3,7 +3,7 @@
 **用 MoonBit 开发微信小程序**：业务逻辑全部是纯 MoonBit 代码——类型安全、可单测、
 可属性测试；构建产物为单个 CommonJS 模块，页面与组件文件仅剩一行装配代码。
 
-![version](https://img.shields.io/badge/version-0.4.0-blue)
+![version](https://img.shields.io/badge/version-0.4.2-blue)
 ![tests](https://img.shields.io/badge/tests-37%20unit%20%E2%9C%93%20%7C%2038%20smoke%20%E2%9C%93-green)
 ![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)
 ![moon](https://img.shields.io/badge/MoonBit-js%20backend-orange)
@@ -23,7 +23,6 @@
 - [测试](#测试)
 - [文档](#文档)
 - [仓库结构](#仓库结构)
-- [路线图](#路线图)
 - [参与](#参与)
 
 ---
@@ -162,15 +161,6 @@ scripts/          new.cjs 脚手架 · mmp.cjs CLI · sim/wx-sim.js 模拟器 ·
 docs/             使用指南 · API 覆盖对照表 · rfc/
 moon.mod          包定义（mooncakes 发布入口）
 ```
-
-## 路线图
-
-- [x] 页面/App/Component 模型、wx 类型绑定、状态自动 diff
-- [x] 跨页 store、声明式路由、CLI 与脚手架、无头测试基建
-- [x] wx API 扩展绑定、平台探测与跨端设计（RFC 0001）
-- [ ] 平台适配实现（支付宝 / 抖音，设计见 RFC 0001）
-- [ ] 分包 / 独立分包支持
-- [ ] 组件与 UI 物料包
 
 ## 参与
 
