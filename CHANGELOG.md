@@ -2,6 +2,12 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.4.3] - 2026-09-06
+
+### Changed
+- README 重写为英文工具主页（Features / Installation / Usage / Performance /
+  Documentation / Repository / Contributing / License），移除前版文案式内容。
+
 ## [0.4.2] - 2026-09-06
 
 ### Changed（README 主页收敛）
