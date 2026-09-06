@@ -20,6 +20,8 @@ pub fn confirm(String, String, show_cancel? : Bool, on_result~ : (Bool) -> Unit)
 
 pub fn copy_with_toast(String, tip? : String) -> Unit
 
+pub fn create_store(String, Json) -> Store
+
 pub fn diff_from_scratch(Json) -> Array[(String, Json)]
 
 pub fn diff_partial(Json, Json) -> Array[(String, Json)]
@@ -54,6 +56,10 @@ pub fn navigate_back(delta? : Int) -> Unit
 
 pub fn navigate_to(String) -> Unit
 
+pub fn navigate_to_route(String, params? : Json) -> Unit
+
+pub fn open_location(Double, Double, name? : String, address? : String) -> Unit
+
 pub fn page(String) -> Unit raise MpError
 
 pub fn page_config(String) -> JsVal raise MpError
@@ -62,7 +68,11 @@ pub fn page_scroll_to(Int, duration? : Int) -> Unit
 
 pub fn patch_to_json(Array[(String, Json)]) -> Json
 
+pub fn preview_image(Array[String], current? : String) -> Unit
+
 pub fn redirect_to(String) -> Unit
+
+pub fn redirect_to_route(String, params? : Json) -> Unit
 
 pub fn register_app(AppDef) -> Unit
 
@@ -70,9 +80,21 @@ pub fn register_component(ComponentDef) -> Unit
 
 pub fn register_page(PageDef) -> Unit
 
+pub fn register_route(RouteDef) -> Unit
+
 pub fn remove_storage(String) -> Unit
 
 pub fn request(String, http_method? : HttpMethod, data? : Json, (Int, Json, Json) -> Unit, (String) -> Unit) -> Unit
+
+pub fn route_allowed_params(String) -> Array[String]?
+
+pub fn route_count() -> Int
+
+pub fn route_registered(String) -> Bool
+
+pub fn route_url(String, Array[(String, Json)]) -> String
+
+pub fn scan_code(on_result~ : (String) -> Unit) -> Unit
 
 pub fn set_clipboard(String) -> Unit
 
@@ -84,11 +106,17 @@ pub fn set_storage(String, Json) -> Unit
 
 pub fn share_card(String, path? : String, image_url? : String) -> Json
 
+pub fn show_action_sheet(Array[String], on_result~ : (Int?) -> Unit, title? : String) -> Unit
+
 pub fn show_loading(String, mask? : Bool) -> Unit
 
 pub fn stop_pull_down_refresh() -> Unit
 
 pub fn switch_tab(String) -> Unit
+
+pub fn switch_tab_route(String) -> Unit
+
+pub fn system_info() -> Json
 
 pub fn toast(String, icon? : ToastIcon, mask? : Bool, duration? : Int) -> Unit
 
@@ -139,11 +167,13 @@ pub fn JsVal::to_json(Self) -> Json?
 pub struct PageCtx {
   // private fields
 }
+pub fn PageCtx::bind_store(Self, Store) -> Unit
 pub fn PageCtx::get_data(Self) -> Json?
 pub fn PageCtx::replace_state(Self, Json) -> Unit
 pub fn PageCtx::set_data(Self, Json) -> Unit
 pub fn PageCtx::set_state(Self, Json) -> Unit
 pub fn PageCtx::trigger_event(Self, String, Json) -> Unit
+pub fn PageCtx::unbind_store(Self, Store) -> Unit
 
 pub(all) struct PageDef {
   path : String
@@ -160,6 +190,19 @@ pub fn Payload::new(JsVal) -> Self
 pub fn Payload::number_at(Self, Array[String]) -> Double?
 pub fn Payload::raw(Self) -> JsVal
 pub fn Payload::string_at(Self, Array[String]) -> String?
+
+pub(all) struct RouteDef {
+  path : String
+  params : Array[String]
+}
+
+pub struct Store {
+  // private fields
+}
+pub fn Store::label(Self) -> String
+pub fn Store::set(Self, Json) -> Unit
+pub fn Store::snapshot(Self) -> Json
+pub fn Store::subscriber_count(Self) -> Int
 
 pub(all) enum ToastIcon {
   Success
