@@ -163,31 +163,90 @@ pub(all) struct PageDef {
 let page_registry : Map[String, PageDef] = Map([])
 
 ///|
-/// 注册页面定义（须在对应页面 JS 执行前完成，通常在 app 入口处）
+/// 注册页面定义（须在对应页面 JS 执行前完成，通常在 app 入口处）。
+///
+/// dev-time 一致性校验（console.warn，不 raise）：
+/// - 路径格式：非空且建议以 "pages/" 开头（与 app.json 保持一致）
+/// - handlers 内部重名、returns 内部重名、handlers 与 returns 交叉重名
 pub fn register_page(def : PageDef) -> Unit {
   if page_registry.contains(def.path) {
     js_dev_warn(
       "register_page: 页面 \"\{def.path}\" 重复注册，旧定义被覆盖（幂等注册请收敛到 ensure_registered）",
     )
   }
+  if def.path == "" {
+    js_dev_warn("register_page: 页面路径为空，请检查 PageDef.path")
+  } else if !def.path.has_prefix("pages/") {
+    js_dev_warn(
+      "register_page: \"\{def.path}\" 不以 pages/ 开头——请确认与 app.json 的 pages 注册一致",
+    )
+  }
+  let seen : Map[String, Unit] = Map([])
+  for kv in def.handlers {
+    let (name, _) = kv
+    if seen.contains(name) {
+      js_dev_warn(
+        "register_page(\{def.path}): handlers 存在重名事件 \"\{name}\"",
+      )
+    }
+    seen[name] = ()
+  }
+  let rseen : Map[String, Unit] = Map([])
+  for kv in def.returns {
+    let (name, _) = kv
+    if rseen.contains(name) {
+      js_dev_warn(
+        "register_page(\{def.path}): returns 存在重名钩子 \"\{name}\"",
+      )
+    }
+    if seen.contains(name) {
+      js_dev_warn(
+        "register_page(\{def.path}): \"\{name}\" 同时出现在 handlers 与 returns，将相互覆盖",
+      )
+    }
+    rseen[name] = ()
+  }
   page_registry[def.path] = def
 }
 
 ///|
 /// 供 JS 侧调用：按路径构建 Page() 配置对象。
+///
+/// 生命周期兜底：无论页面是否自定义 onUnload，构建出的配置都保证卸载时
+/// 自动执行 `unbind_all`（清除该页面在所有 store 上的订阅）——
+/// 用户自定义 onUnload 会被包装（先执行用户逻辑，再清理），
+/// 未定义则框架追加一个仅清理的 onUnload。
 pub fn page_config(path : String) -> JsVal raise MpError {
   guard page_registry.get(path) is Some(def) else {
     raise MpError::PageNotFound(path)
   }
-  let names : FixedArray[String] = FixedArray::make(def.handlers.length(), "")
-  let fns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(
-    def.handlers.length(),
-    (_, _) => (),
-  )
+  let extra = if def.handlers.any(fn(kv) { kv.0 == "onUnload" }) {
+    0
+  } else {
+    1
+  }
+  let total = def.handlers.length() + extra
+  let names : FixedArray[String] = FixedArray::make(total, "")
+  let fns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(total, (_, _) => {
+    ()
+  })
   for i, kv in def.handlers {
     let (name, h) = kv
     names[i] = name
-    fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+    if name == "onUnload" {
+      // 用户自定义卸载逻辑 → 包装：先用户后自动清理订阅
+      fns[i] = fn(page, arg) {
+        h(PageCtx::new(page), Payload::new(arg))
+        unbind_all(PageCtx::new(page))
+      }
+    } else {
+      fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+    }
+  }
+  if extra == 1 {
+    let last = def.handlers.length()
+    names[last] = "onUnload"
+    fns[last] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
   }
   let rnames : FixedArray[String] = FixedArray::make(def.returns.length(), "")
   let rfns : FixedArray[(JsVal, JsVal) -> String] = FixedArray::make(

@@ -4,7 +4,8 @@ A MoonBit framework for building WeChat Mini Programs — type-safe runtime with
 automatic state diffing, declarative pages/components/routing, and headless
 testing infrastructure.
 
-[![version](https://img.shields.io/badge/version-0.4.3-blue)](#)
+[![version](https://img.shields.io/badge/version-0.5.0-blue)](#)
+[![tests](https://img.shields.io/badge/tests-43%20unit%20%E2%9C%93%20%7C%2038%20smoke%20%E2%9C%93-green)](#)
 [![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)](#)
 [![CI](https://github.com/Magic486/moon-miniprogram/actions/workflows/ci.yml/badge.svg)](https://github.com/Magic486/moon-miniprogram/actions)
 
@@ -120,7 +121,7 @@ docs/             guide, API coverage table, RFCs
 
 ```bash
 git clone https://github.com/Magic486/moon-miniprogram
-moon test                # 37 unit tests
+moon test                # 43 unit tests
 powershell scripts/build-example.ps1   # 38 smoke assertions
 ```
 

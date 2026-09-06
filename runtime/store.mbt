@@ -33,11 +33,38 @@ pub struct Store {
 let store_seq : Ref[Int] = Ref(0)
 
 ///|
+/// 全部已创建 store 的目录：供生命周期清理（unbind_all）扫描。
+/// Store 值共享同一 subs/data Ref，登记值副本即可。
+let all_stores : Ref[Array[Store]] = Ref([])
+
+///|
 /// 创建跨页状态源。label 仅供调试/文档
 pub fn create_store(label : String, initial : Json) -> Store {
   let id = store_seq.val
   store_seq.val = id + 1
-  { id, label, data: Ref(initial), subs: Ref([]) }
+  let s = { id, label, data: Ref(initial), subs: Ref([]) }
+  all_stores.val.push(s)
+  s
+}
+
+///|
+/// 把 ctx 从**所有** store 的订阅中移除。
+/// 由框架在页面 onUnload / 组件 detached 时自动调用（build_cfg 注入兜底），
+/// 即使开发者忘记显式 unbind_store 也不会悬挂引用或收到幽灵更新。
+pub fn unbind_all(ctx : PageCtx) -> Unit {
+  for s in all_stores.val {
+    let subs = s.subs.val
+    let keep : Array[(Int, JsVal)] = []
+    for pair in subs {
+      let (sid, jsval) = pair
+      if sid != s.id || !js_unsafe_eq(jsval, ctx.page) {
+        keep.push((sid, jsval))
+      }
+    }
+    if keep.length() != subs.length() {
+      s.subs.val = keep
+    }
+  }
 }
 
 ///|

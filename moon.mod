@@ -1,6 +1,6 @@
 name = "Magic486/moon-miniprogram"
 
-version = "0.4.4"
+version = "0.5.0"
 
 readme = "README.mbt.md"
 

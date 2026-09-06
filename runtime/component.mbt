@@ -32,31 +32,83 @@ pub(all) struct ComponentDef {
 let component_registry : Map[String, ComponentDef] = Map([])
 
 ///|
-/// 注册组件定义（在 app 入口或引擎初始化时执行一次）
+/// 注册组件定义（在 app 入口或引擎初始化时执行一次）。
+///
+/// dev-time 一致性校验（console.warn，不 raise）：
+/// - key 格式：建议以 "components/" 开头（与 usingComponents 路径一致）
+/// - handlers 内部重名、observers 与 handlers 交叉重名
 pub fn register_component(def : ComponentDef) -> Unit {
   if component_registry.contains(def.key) {
     js_dev_warn(
       "register_component: 组件 \"\{def.key}\" 重复注册，旧定义被覆盖（幂等注册请收敛到 ensure_registered）",
     )
   }
+  if def.key == "" {
+    js_dev_warn(
+      "register_component: 组件 key 为空，请检查 ComponentDef.key",
+    )
+  } else if !def.key.has_prefix("components/") {
+    js_dev_warn(
+      "register_component: \"\{def.key}\" 不以 components/ 开头——请确认与 usingComponents 注册路径一致",
+    )
+  }
+  let seen : Map[String, Unit] = Map([])
+  for kv in def.handlers {
+    let (name, _) = kv
+    if seen.contains(name) {
+      js_dev_warn(
+        "register_component(\{def.key}): handlers 存在重名方法 \"\{name}\"",
+      )
+    }
+    seen[name] = ()
+  }
+  for kv in def.observers {
+    let (name, _) = kv
+    if seen.contains(name) {
+      js_dev_warn(
+        "register_component(\{def.key}): \"\{name}\" 同时出现在 handlers 与 observers，将相互覆盖",
+      )
+    }
+  }
   component_registry[def.key] = def
 }
 
 ///|
 /// 供 JS 侧调用：按 key 构建 Component() 配置对象。
+///
+/// 生命周期兜底：组件销毁（detached）时自动执行 unbind_all，
+/// 清除该组件在所有 store 上的订阅（防悬挂引用）。用户自定义 detached
+/// 会被包装（先用户后清理），未定义则框架追加。
 pub fn component_config(key : String) -> JsVal raise MpError {
   guard component_registry.get(key) is Some(def) else {
     raise MpError::ComponentNotFound(key)
   }
-  let names : FixedArray[String] = FixedArray::make(def.handlers.length(), "")
-  let fns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(
-    def.handlers.length(),
-    (_, _) => (),
-  )
+  let extra = if def.handlers.any(fn(kv) { kv.0 == "detached" }) {
+    0
+  } else {
+    1
+  }
+  let total = def.handlers.length() + extra
+  let names : FixedArray[String] = FixedArray::make(total, "")
+  let fns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(total, (_, _) => {
+    ()
+  })
   for i, kv in def.handlers {
     let (name, h) = kv
     names[i] = name
-    fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+    if name == "detached" {
+      fns[i] = fn(page, arg) {
+        h(PageCtx::new(page), Payload::new(arg))
+        unbind_all(PageCtx::new(page))
+      }
+    } else {
+      fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+    }
+  }
+  if extra == 1 {
+    let last = def.handlers.length()
+    names[last] = "detached"
+    fns[last] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
   }
   let onames : FixedArray[String] = FixedArray::make(def.observers.length(), "")
   let ofns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(

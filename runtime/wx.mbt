@@ -101,7 +101,10 @@ pub fn get_storage(key : String) -> Json {
 
 ///|
 extern "js" fn wx_get_storage_sync(key : String) -> JsVal =
-  #|(key) => wx.getStorageSync(key)
+  #|(key) => {
+  #|  if (typeof wx === "undefined" || !wx.getStorageSync) { return ""; }
+  #|  return wx.getStorageSync(key);
+  #|}
 
 ///|
 /// 移除本地缓存

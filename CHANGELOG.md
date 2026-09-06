@@ -2,6 +2,22 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.5.0] - 2026-09-06
+
+### Added（框架成熟度：生命周期安全 / dev 校验 / 数据助手）
+- **生命周期自动清理**：构建出的页面/组件配置自动携带 onUnload / detached 兜底，
+  无论开发者是否自定义同名处理器，卸载/销毁时都会把该页面/组件从所有 store
+  订阅中移除（`unbind_all`）——不再依赖手动 unbind，杜绝悬挂引用与幽灵更新。
+- **dev-time 一致性校验**：`register_page` / `register_component` 增加
+  console.warn 校验（路径/key 格式与前缀、handlers 重名、returns 重名、
+  handlers×returns 与 handlers×observers 交叉重名），全部不 raise。
+- **数据助手**（`runtime/data.mbt`）：`Payload::query_string/query_number/query_bool`
+  （onLoad 参数反序列化）、`PageCtx::set_field`（受控输入一行粘合）、
+  `get_storage_string`。
+- **wx_get_storage_sync 加无 wx guard**（node 单测与无环境安全）。
+- **文档**：使用指南新增「分包（SubPackages）与多页应用」「环境配置」两节。
+- 单测 +6（自动清理 3 / 数据助手 3）→ 43。
+
 ## [0.4.4] - 2026-09-06
 
 ### Fixed
