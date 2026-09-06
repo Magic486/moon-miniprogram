@@ -4,7 +4,7 @@
 > 可属性测试；编译产物是一个 CommonJS 模块，页面 JS 只剩一行装配代码。
 
 ![version](https://img.shields.io/badge/version-0.3.5-blue)
-![tests](https://img.shields.io/badge/tests-33%20unit%20%E2%9C%93%20%7C%2036%20smoke%20%E2%9C%93-green)
+![tests](https://img.shields.io/badge/tests-37%20unit%20%E2%9C%93%20%7C%2038%20smoke%20%E2%9C%93-green)
 ![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)
 ![moon](https://img.shields.io/badge/MoonBit-js%20backend-orange)
 
@@ -136,8 +136,8 @@ let counter_page : @mp.PageDef = {
 三层，全部无头优先，任何提交前必须全绿：
 
 ```bash
-moon test                              # 33 个单测（含 200 轮随机不变式）
-powershell scripts/build-example.ps1   # 构建 + 36 项端到端冒烟（node 模拟微信运行时）
+moon test                              # 37 个单测（含 200 轮随机不变式）
+powershell scripts/build-example.ps1   # 构建 + 38 项端到端冒烟（node 模拟微信运行时）
 ```
 
 `scripts/sim/wx-sim.js` 是对外可复用的**微信运行时模拟器**：App/Page/Component/wx/storage
@@ -151,8 +151,9 @@ powershell scripts/build-example.ps1   # 构建 + 36 项端到端冒烟（node �
 2. [页面与事件](docs/使用指南.md#页面与事件) / [状态管理](docs/使用指南.md#状态管理) /
    [跨页 store](docs/使用指南.md#跨页状态-store) / [自定义组件](docs/使用指南.md#自定义组件)
 3. [路由与导航](docs/使用指南.md#路由与导航) / [wx API 参考](docs/使用指南.md#wx-api-参考)
-4. [无头测试](docs/使用指南.md#无头测试) / [构建与发布](docs/使用指南.md#构建与发布)
-5. [常见坑与 FAQ](docs/使用指南.md#常见坑与-faq)
+4. [📊 wx API 覆盖对照表](docs/API覆盖对照表.md)（微信官方 ↔ 本框架，约 55 个 pub 函数）
+5. [无头测试](docs/使用指南.md#无头测试) / [构建与发布](docs/使用指南.md#构建与发布)
+6. [常见坑与 FAQ](docs/使用指南.md#常见坑与-faq)
 
 ## 仓库结构
 
