@@ -8,7 +8,7 @@ testing infrastructure.
 [![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)](#)
 [![CI](https://github.com/Magic486/moon-miniprogram/actions/workflows/ci.yml/badge.svg)](https://github.com/Magic486/moon-miniprogram/actions)
 
-Documentation: [使用指南](docs/使用指南.md) · [wx API 覆盖对照表](docs/API覆盖对照表.md) · [RFC 0001 — 平台适配](docs/rfc/0001-平台适配设计.md)
+Documentation: [Guide](docs/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md) · [wx API coverage](docs/API%E8%A6%86%E7%9B%96%E5%AF%B9%E7%85%A7%E8%A1%A8.md) · [RFC 0001 - Platform adapters](docs/rfc/0001-%E5%B9%B3%E5%8F%B0%E9%80%82%E9%85%8D%E8%AE%BE%E8%AE%A1.md)
 
 ---
 
@@ -96,10 +96,12 @@ JSON bytes per update.
 
 ## Documentation
 
-- [使用指南](docs/使用指南.md) — from zero to a runnable Mini Program; state,
-  components, routing, headless testing, release.
-- [wx API 覆盖对照表](docs/API覆盖对照表.md) — WeChat API coverage, domain by domain.
-- [RFC 0001](docs/rfc/0001-平台适配设计.md) — platform adapter architecture
+- [Guide](docs/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md) — from zero to a
+  runnable Mini Program; state, components, routing, headless testing, release.
+- [wx API coverage table](docs/API%E8%A6%86%E7%9B%96%E5%AF%B9%E7%85%A7%E8%A1%A8.md) —
+  WeChat API coverage, domain by domain.
+- [RFC 0001](docs/rfc/0001-%E5%B9%B3%E5%8F%B0%E9%80%82%E9%85%8D%E8%AE%BE%E8%AE%A1.md) —
+  platform adapter architecture
   (WeChat is the current target; Alipay / Douyin are designed for).
 - API reference per function is available on the
   [mooncakes package page](https://mooncakes.io).
