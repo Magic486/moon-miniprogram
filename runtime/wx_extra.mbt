@@ -212,23 +212,29 @@ extern "js" fn wx_download(url : String, cb : (String) -> Unit) -> Unit =
 // ---------- 位置 ----------
 
 ///|
-/// 获取当前位置（需用户授权）。成功回调含 latitude/longitude 的对象；
-/// 取消或失败回调空对象。授权被拒时引导用户到设置页的职责在业务层。
-pub fn get_location(on_result~ : (Json) -> Unit) -> Unit {
-  wx_location(on_result)
+/// 获取当前位置（gcj02，需用户授权）。
+/// 成功回调 (latitude, longitude)；取消 / 授权拒绝 / API 不存在 / 无 wx
+/// 一律回调 on_fail（同库其它异步约定的"失败必达"）。
+pub fn get_location(
+  on_result~ : (Double, Double) -> Unit,
+  on_fail? : () -> Unit = fn() { () },
+) -> Unit {
+  wx_location(on_result, on_fail)
 }
 
 ///|
-extern "js" fn wx_location(cb : (Json) -> Unit) -> Unit =
-  #|(cb) => {
-  #|  if (typeof wx === "undefined" || !wx.getLocation) { cb({}); return; }
+/// 注意：MoonBit Json 不能直接作 FFI 回调参数，结构化数据必须用
+/// 基础类型（Double/Double）回调传递，再在 MoonBit 侧组装。
+extern "js" fn wx_location(
+  ok : (Double, Double) -> Unit,
+  fail : () -> Unit,
+) -> Unit =
+  #|(ok, fail) => {
+  #|  if (typeof wx === "undefined" || !wx.getLocation) { fail(); return; }
   #|  wx.getLocation({
   #|    type: "gcj02",
-  #|    success: (res) => cb({
-  #|      latitude: Number(res.latitude),
-  #|      longitude: Number(res.longitude),
-  #|    }),
-  #|    fail: () => cb({}),
+  #|    success: (res) => ok(Number(res.latitude), Number(res.longitude)),
+  #|    fail: () => fail(),
   #|  });
   #|}
 

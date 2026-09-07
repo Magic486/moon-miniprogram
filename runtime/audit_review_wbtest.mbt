@@ -133,3 +133,59 @@ test "audit: replace_state 缺根键发警告且不 raise（文档化根键语�
     _ => fail("data missing")
   }
 }
+
+///|
+/// 微信原生契约：自定义方法必须位于 cfg.methods（组件模板事件绑定查找
+/// methods）；生命周期钩子放配置顶层。
+test "audit: 组件方法按原生契约进入 cfg.methods" {
+  register_component({
+    key: "components/audit-m/audit-m",
+    properties: jobj([]),
+    data: jobj([]),
+    handlers: [
+      ("onTap", (_ctx, _payload) => ()),
+      ("attached", (_ctx, _payload) => ()),
+      ("onPick", (_ctx, _payload) => ()),
+    ],
+    observers: [],
+    page_lifetimes: [],
+  })
+  let cfg = component_config("components/audit-m/audit-m")
+  inspect(js_member_typeof(js_get(cfg, "methods"), "onTap"), content="function")
+  inspect(
+    js_member_typeof(js_get(cfg, "methods"), "onPick"),
+    content="function",
+  )
+  // 生命周期不进 methods，在顶层
+  inspect(
+    js_member_typeof(js_get(cfg, "methods"), "attached"),
+    content="undefined",
+  )
+  inspect(js_member_typeof(cfg, "attached"), content="function")
+  // 未显式写 detached 时框架注入顶层兜底
+  inspect(js_member_typeof(cfg, "detached"), content="function")
+}
+
+///|
+/// 位置回调经基础类型 FFI（非 Json）：成功 (lat,lng)、失败必达
+test "audit: get_location 成功/失败都经正确 FFI 传递" {
+  let got : Ref[(Double, Double)?] = Ref(None)
+  audit_with_wx(
+    js_eval(
+      "({ getLocation(o) { o.success({ latitude: 31.23, longitude: 121.47 }) } })",
+    ),
+    () => get_location(on_result=(lat, lng) => got.val = Some((lat, lng))),
+  )
+  match got.val {
+    Some((lat, lng)) => {
+      inspect(lat, content="31.23")
+      inspect(lng, content="121.47")
+    }
+    None => fail("success callback should fire")
+  }
+  let failed : Ref[Bool] = Ref(false)
+  audit_with_wx(js_eval("({})"), () => {
+    get_location(on_result=(_lat, _lng) => (), on_fail=() => failed.val = true)
+  })
+  inspect(failed.val, content="true")
+}

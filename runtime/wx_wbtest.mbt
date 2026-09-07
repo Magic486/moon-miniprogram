@@ -114,15 +114,14 @@ test "wx_extra: 无 wx 环境安全降级" {
   let code : Ref[String] = Ref("?")
   login(on_result=v => code.val = v)
   inspect(code.val, content="")
-  // 位置：失败回调空对象
-  let loc : Ref[Json] = Ref(jstr("?"))
-  get_location(on_result=j => loc.val = j)
-  inspect(
-    loc.val is Json::Object(_),
-    content=(
-      #|false
-    ),
-  )
+  // 位置：无 wx → on_fail 被调用，成功回调不被调
+  let got_fail : Ref[Bool] = Ref(false)
+  let got_ok : Ref[Bool] = Ref(false)
+  get_location(on_result=(_lat, _lng) => got_ok.val = true, on_fail=() => {
+    got_fail.val = true
+  })
+  inspect(got_fail.val, content="true")
+  inspect(got_ok.val, content="false")
   // 保存图片：on_fail 被调用
   let saved : Ref[Bool] = Ref(false)
   save_image_to_album("/tmp/a.png", on_fail=() => saved.val = true)

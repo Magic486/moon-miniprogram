@@ -2,6 +2,31 @@
 
 本项目的所有重要变更记录于此。版本遵循语义化版本。
 
+## [0.5.1] - 2026-09-07
+
+### Fixed（依据 docs/reviews/2026-09-07-framework-review.md 的契约修复）
+- **组件原生契约（P0）**：自定义方法改放 `cfg.methods`（微信模板事件绑定
+  查找 methods），生命周期（created/attached/ready/moved/detached/error）
+  留在配置顶层；detached 自动退订兜底同步。冒烟与回归按原生契约断言。
+- **get_location FFI（P0）**：废弃 Json 直接回调（JS 普通对象 ≠ MoonBit
+  Json 编码），改为 `on_result~(lat, lng) + on_fail~` 基础类型回调；
+  成功/取消/拒绝/API 不存在均正确传递；修正 wx_wbtest 中被固化错误的
+  false 期望。
+- **replace_state 数据根模型（P0）**：明确根键不可删（微信 setData 限制），
+  缺根键发 dev 警告并保留；删除以子对象容器父级替换生效（docstring/文档同步）。
+- **脚手架布局（P0）**：project.config.json 移至项目根，miniprogramRoot 指向
+  miniprogram/（导入根目录即可）；依赖对齐已发布版本。
+- removeStorageSync 传原始字符串 key（P1）；
+  getScreenBrightness 合法 0 不再被 `|| -1` 误判（P1）；
+  路由参数名与值分别 URL 编码、超 Int 范围数值保真（P1）；
+  观察器收全部实参 + observer_value/args/old_value 访问器（P1）；
+  导航栏前景色 NavFrontColor 枚举化。
+- mmp dev：编译失败不再退出进程，修正后自动恢复；watch 覆盖 moon.pkg/moon.mod。
+- 评审与探针存档 docs/reviews/；8 条契约回归转正（audit_review_wbtest.mbt）。
+
+### Tests
+- 单测 43 → **52**（audit 契约回归 +9）；冒烟断言更新为原生 methods 契约。
+
 ## [0.5.0] - 2026-09-06
 
 ### Added（框架成熟度：生命周期安全 / dev 校验 / 数据助手）

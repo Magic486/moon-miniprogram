@@ -71,7 +71,7 @@
 
 | 微信能力 | 本框架 | 备注 |
 |---|---|---|
-| getLocation | ✅ `get_location(on_result~)` | gcj02，回调对象 |
+| getLocation | ✅ `get_location(on_result~, on_fail~)` | gcj02，(lat,lng) 基础类型回调 |
 | openLocation | ✅ `open_location(lat, lng, name~, address~)` | |
 | wx.request | ✅ `request(url, http_method~, data~, on_response, on_fail)` | 暴露 status/header |
 | login | ✅ `login(on_result~)` | code 回调 |

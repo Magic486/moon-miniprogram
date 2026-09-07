@@ -74,7 +74,21 @@ pub fn register_component(def : ComponentDef) -> Unit {
 }
 
 ///|
+/// 组件生命周期名集合（这些进配置顶层；其余名字为自定义方法进 cfg.methods）
+fn is_component_lifecycle(name : String) -> Bool {
+  name == "created" ||
+  name == "attached" ||
+  name == "ready" ||
+  name == "moved" ||
+  name == "detached" ||
+  name == "error"
+}
+
+///|
 /// 供 JS 侧调用：按 key 构建 Component() 配置对象。
+///
+/// 微信原生契约：自定义方法必须在 cfg.methods 内，组件模板事件才能命中；
+/// 生命周期钩子放配置顶层（微信接受顶层生命周期）。
 ///
 /// 生命周期兜底：组件销毁（detached）时自动执行 unbind_all，
 /// 清除该组件在所有 store 上的订阅（防悬挂引用）。用户自定义 detached
@@ -83,32 +97,47 @@ pub fn component_config(key : String) -> JsVal raise MpError {
   guard component_registry.get(key) is Some(def) else {
     raise MpError::ComponentNotFound(key)
   }
-  let extra = if def.handlers.any(fn(kv) { kv.0 == "detached" }) {
-    0
-  } else {
-    1
-  }
-  let total = def.handlers.length() + extra
-  let names : FixedArray[String] = FixedArray::make(total, "")
-  let fns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(total, (_, _) => {
-    ()
-  })
-  for i, kv in def.handlers {
+  // 先统计自定义 detached 是否存在，决定是否追加兜底
+  let has_detached = def.handlers.any(fn(kv) { kv.0 == "detached" })
+  let life_count = def.handlers
+    .filter(fn(kv) { is_component_lifecycle(kv.0) })
+    .length()
+  let life_total = life_count + (if has_detached { 0 } else { 1 })
+  let method_total = def.handlers.length() - life_count
+  let lnames : FixedArray[String] = FixedArray::make(life_total, "")
+  let lfns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(life_total, (
+    _,
+    _,
+  ) => ())
+  let mnames : FixedArray[String] = FixedArray::make(method_total, "")
+  let mfns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(
+    method_total,
+    (_, _) => (),
+  )
+  let mut li : Int = 0
+  let mut mi : Int = 0
+  for kv in def.handlers {
     let (name, h) = kv
-    names[i] = name
-    if name == "detached" {
-      fns[i] = fn(page, arg) {
-        h(PageCtx::new(page), Payload::new(arg))
-        unbind_all(PageCtx::new(page))
+    if is_component_lifecycle(name) {
+      lnames[li] = name
+      if name == "detached" {
+        lfns[li] = fn(page, arg) {
+          h(PageCtx::new(page), Payload::new(arg))
+          unbind_all(PageCtx::new(page))
+        }
+      } else {
+        lfns[li] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
       }
+      li = li + 1
     } else {
-      fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+      mnames[mi] = name
+      mfns[mi] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+      mi = mi + 1
     }
   }
-  if extra == 1 {
-    let last = def.handlers.length()
-    names[last] = "detached"
-    fns[last] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
+  if !has_detached {
+    lnames[li] = "detached"
+    lfns[li] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
   }
   let onames : FixedArray[String] = FixedArray::make(def.observers.length(), "")
   let ofns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(
@@ -136,8 +165,10 @@ pub fn component_config(key : String) -> JsVal raise MpError {
   js_build_component_cfg(
     def.properties.stringify(),
     def.data.stringify(),
-    names,
-    fns,
+    lnames,
+    lfns,
+    mnames,
+    mfns,
     onames,
     ofns,
     pnames,
@@ -147,19 +178,21 @@ pub fn component_config(key : String) -> JsVal raise MpError {
 
 ///|
 /// 构建 Component() 配置：properties 规范转微信格式（"t" 字符串 →
-/// 构造函数）；方法与 observers 绑定 this；pageLifetimes 组装嵌套对象。
-/// 平行数组传列表。
+/// 构造函数）；生命周期顶层绑定 this；自定义方法进 cfg.methods；
+/// observers 收全部实参数组；pageLifetimes 组装嵌套对象。平行数组传列表。
 extern "js" fn js_build_component_cfg(
   props_json : String,
   data_json : String,
-  names : FixedArray[String],
-  handlers : FixedArray[(JsVal, JsVal) -> Unit],
+  life_names : FixedArray[String],
+  life_fns : FixedArray[(JsVal, JsVal) -> Unit],
+  method_names : FixedArray[String],
+  method_fns : FixedArray[(JsVal, JsVal) -> Unit],
   observer_names : FixedArray[String],
   observer_fns : FixedArray[(JsVal, JsVal) -> Unit],
   plifetime_names : FixedArray[String],
   plifetime_fns : FixedArray[(JsVal, JsVal) -> Unit],
 ) -> JsVal =
-  #|(propsJson, dataJson, names, handlers, onames, ofns, pnames, pfns) => {
+  #|(propsJson, dataJson, lnames, lfns, mnames, mfns, onames, ofns, pnames, pfns) => {
   #|  const TYPES = {
   #|    String: String,
   #|    Number: Number,
@@ -184,8 +217,17 @@ extern "js" fn js_build_component_cfg(
   #|    props[k] = def;
   #|  }
   #|  const cfg = { properties: props, data: JSON.parse(dataJson) };
-  #|  for (let i = 0; i < names.length; i++) {
-  #|    cfg[names[i]] = function(arg) { handlers[i](this, arg); };
+  #|  // 生命周期（created/attached/ready/moved/detached/error）放顶层
+  #|  for (let i = 0; i < lnames.length; i++) {
+  #|    cfg[lnames[i]] = function(arg) { lfns[i](this, arg); };
+  #|  }
+  #|  // 自定义方法必须进 cfg.methods（微信原生契约：模板事件绑定查找 methods）
+  #|  if (mnames.length > 0) {
+  #|    const methods = {};
+  #|    for (let i = 0; i < mnames.length; i++) {
+  #|      methods[mnames[i]] = function(arg) { mfns[i](this, arg); };
+  #|    }
+  #|    cfg.methods = methods;
   #|  }
   #|  if (onames.length > 0) {
   #|    const obs = {};

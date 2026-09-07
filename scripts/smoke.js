@@ -59,14 +59,15 @@ check("onCopy -> showToast", sim.calls.includes("showToast"), true);
 check("onCopy -> vibrateShort", sim.calls.includes("vibrateShort"), true);
 check("storage not touched by copy", sim.storage.size, 0);
 
-// ---- tag 自定义组件：属性翻译 → 事件出去 ----
+// ---- tag 自定义组件：属性翻译 → 方法(methods) → 事件出去 ----
 engine.component("components/tag/tag");
 const cc = sim.componentCfg;
 check("component properties type translated", cc.properties.text.type, String);
 check("component properties default", cc.properties.text.value, "");
+check("component methods follow native contract", typeof cc.methods === "object" && typeof cc.methods.onTap === "function", true);
 const cInst = sim.makeInstance(cc.data);
 cInst.data.text = "hello-moonbit";
-cc.onTap.call(cInst);
+cc.methods.onTap.call(cInst);
 check("component emits pick event", cInst.__events[0].name, "pick");
 check("event detail carries text", cInst.__events[0].detail.value, "hello-moonbit");
 
