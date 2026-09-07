@@ -190,7 +190,10 @@ extern "js" fn js_build_component_cfg(
   #|  if (onames.length > 0) {
   #|    const obs = {};
   #|    for (let i = 0; i < onames.length; i++) {
-  #|      obs[onames[i]] = function(value) { ofns[i](this, value); };
+  #|      // 微信 observer 的实参数随监听字段数变化（单字段 newVal,oldVal；
+  #|      // 逗号多字段 newA,newB,…）。把全部实参作为数组传入，
+  #|      // MoonBit 侧经 Payload::observer_value/observer_args 读取，不再丢参。
+  #|      obs[onames[i]] = function(...args) { ofns[i](this, args); };
   #|    }
   #|    cfg.observers = obs;
   #|  }

@@ -50,3 +50,32 @@ pub fn get_storage_string(key : String) -> String {
     _ => ""
   }
 }
+
+///|
+/// 观察器回调的全部实参：
+/// 单字段监听（"field"）→ 微信传 (newVal, oldVal) → [new, old]；
+/// 逗号多字段（"a,b"）→ 各字段新值依次排列。
+pub fn Payload::observer_args(self : Payload) -> Array[Json] {
+  match self.json() {
+    Some(Json::Array(a)) => a
+    _ => []
+  }
+}
+
+///|
+/// 观察器回调的新值（实参数组首元素；空数组回 None）
+pub fn Payload::observer_value(self : Payload) -> Json? {
+  match self.observer_args() {
+    arr if arr.length() > 0 => Some(arr[0])
+    _ => None
+  }
+}
+
+///|
+/// 观察器回调的旧值（实参数组第二个元素；仅单字段监听提供）
+pub fn Payload::observer_old_value(self : Payload) -> Json? {
+  match self.observer_args() {
+    arr if arr.length() > 1 => Some(arr[1])
+    _ => None
+  }
+}

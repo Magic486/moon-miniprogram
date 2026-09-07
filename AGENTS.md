@@ -11,7 +11,7 @@
 
 ```bash
 moon check                            # 类型检查（0 error 才算过）
-moon test                             # 全部单测（37 个，js 目标）
+moon test                             # 全部单测（43 个，js 目标）
 moon fmt                              # 提交前必须跑
 moon info                             # 确认 .mbti 变更是有意的
 powershell scripts/build-example.ps1  # 构建 + 无头冒烟 38 断言
@@ -43,4 +43,4 @@ powershell scripts/build-example.ps1  # 构建 + 无头冒烟 38 断言
 
 ## 验收口径
 
-任何改动在提交前必须四绿：`moon check`、`moon test`（37）、`moon fmt`（无 diff）、冒烟 `ALL SMOKE TESTS PASSED`（38）。
+任何改动在提交前必须四绿：`moon check`、`moon test`（43）、`moon fmt`（无 diff）、冒烟 `ALL SMOKE TESTS PASSED`（38）。

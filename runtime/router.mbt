@@ -65,13 +65,15 @@ extern "js" fn js_encode_uri(s : String) -> String =
   #|(s) => encodeURIComponent(s)
 
 ///|
-/// query 值 → url 编码文本（String 原样编码；数字去 .0；Bool 转 true/false；
-/// 其余 Json 形式输出 null/对象/数组的紧凑 JSON 编码）
+/// query 值 → url 编码文本（String 原样编码；Bool 转 true/false；
+/// 其余 Json 形式输出 null/对象/数组的紧凑 JSON 编码）。
+/// 整数仅在 Int 可表示范围内转整数文本；超出（订单号/时间戳等大数）
+/// 保留 Double 原文，避免 Int 溢出失真（4294967296 不应变 2147483647）。
 fn encode_query_value(v : Json) -> String {
   match v {
     Json::String(s) => js_encode_uri(s)
     Json::Number(d, ..) =>
-      if d == d.floor() {
+      if d == d.floor() && d >= -2_147_483_648.0 && d <= 2_147_483_647.0 {
         js_encode_uri(d.to_int().to_string())
       } else {
         js_encode_uri(d.to_string())
@@ -84,7 +86,8 @@ fn encode_query_value(v : Json) -> String {
 }
 
 ///|
-/// 纯函数：由路径 + 有序 query 构造 url（可单测）
+/// 纯函数：由路径 + 有序 query 构造 url（可单测）。
+/// 参数名与参数值分别做 URL 编码（键含 & / = 等特殊字符不会拆坏 query）。
 pub fn route_url(path : String, query : Array[(String, Json)]) -> String {
   if query.is_empty() {
     return path
@@ -100,7 +103,7 @@ pub fn route_url(path : String, query : Array[(String, Json)]) -> String {
     } else {
       buf.write_string("&")
     }
-    buf.write_string(k)
+    buf.write_string(js_encode_uri(k))
     buf.write_string("=")
     buf.write_string(encode_query_value(v))
   }

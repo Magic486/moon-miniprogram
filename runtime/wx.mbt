@@ -107,10 +107,19 @@ extern "js" fn wx_get_storage_sync(key : String) -> JsVal =
   #|}
 
 ///|
-/// 移除本地缓存
+/// 移除本地缓存（微信 removeStorageSync 的参数是原始字符串 key，
+/// 不是对象；直接经 extern 传递避免包装成 {key:…}）
 pub fn remove_storage(key : String) -> Unit {
-  wx_call("removeStorageSync", jobj([("key", jstr(key))]).stringify())
+  wx_remove_storage_sync(key)
 }
+
+///|
+extern "js" fn wx_remove_storage_sync(key : String) -> Unit =
+  #|(key) => {
+  #|  if (typeof wx !== "undefined" && wx.removeStorageSync) {
+  #|    wx.removeStorageSync(key);
+  #|  }
+  #|}
 
 ///|
 /// 清空本地缓存

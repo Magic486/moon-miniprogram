@@ -131,7 +131,7 @@ test "wx_extra: 无 wx 环境安全降级" {
   vibrate_long()
   keep_screen_on()
   set_screen_brightness(0.5)
-  set_nav_bar_color("white", "#000000")
+  set_nav_bar_color(NavFrontColor::White, "#000000")
   show_nav_bar_loading()
   hide_nav_bar_loading()
   inspect(true, content="true")

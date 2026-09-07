@@ -1,0 +1,61 @@
+///|
+extern "js" fn audit_with_wx(mock : JsVal, f : () -> Unit) -> Unit =
+  #|(mock, f) => { const old = globalThis.wx; try { globalThis.wx = mock; f(); } finally { if (old === undefined) delete globalThis.wx; else globalThis.wx = old; } }
+
+///|
+test "audit: root replacement removes obsolete field" {
+  let p = js_eval("({data:{keep:1,obsolete:2},setData(p){Object.assign(this.data,p)}})")
+  PageCtx::new(p).replace_state({ "keep": 1 })
+  json_inspect(fake_data(p), content={ "keep": 1 })
+}
+
+///|
+test "audit: component methods follow native contract" {
+  register_component({ key: "components/audit/audit", properties: Json::empty_object(), data: Json::empty_object(), handlers: [("onTap", (_, _) => ())], observers: [], page_lifetimes: [] })
+  let cfg = component_config("components/audit/audit")
+  inspect(js_member_typeof(js_get(cfg, "methods"), "onTap"), content="function")
+}
+
+///|
+test "audit: location fallback is MoonBit Json" {
+  let loc : Ref[Json] = Ref(Json::null())
+  audit_with_wx(js_eval("({})"), () => get_location(on_result=j => loc.val = j))
+  inspect(loc.val is Json::Object(_), content="true")
+}
+
+///|
+test "audit: remove storage passes string key" {
+  let wx = js_eval("({removed:null,removeStorageSync(k){this.removed=k}})")
+  audit_with_wx(wx, () => remove_storage("token"))
+  guard js_get(wx, "removed").to_json() is Some(value) else { fail("missing argument") }; json_inspect(value, content="token")
+}
+
+///|
+test "audit: zero brightness remains zero" {
+  let value = Ref(-99.0)
+  audit_with_wx(js_eval("({getScreenBrightness(o){o.success({value:0})}})"), () => get_screen_brightness(on_result=v => value.val = v))
+  inspect(value.val, content="0")
+}
+
+///|
+test "audit: route preserves large integer" {
+  inspect(route_url("/detail", [("id", jnum(4294967296.0))]), content="/detail?id=4294967296")
+}
+
+///|
+test "audit: route encodes parameter name" {
+  inspect(route_url("/detail", [("a&b", jstr("x"))]), content="/detail?a%26b=x")
+}
+
+///|
+extern "js" fn audit_invoke_two(f : JsVal, instance : JsVal) -> Unit =
+  #|(f, instance) => f.call(instance, 1, 2)
+
+///|
+test "audit: multi field observer receives all arguments" {
+  let got : Ref[Json?] = Ref(None)
+  register_component({ key: "components/audit/observer", properties: Json::empty_object(), data: Json::empty_object(), handlers: [], observers: [("a,b", (_, p) => got.val = p.json())], page_lifetimes: [] })
+  let cfg = component_config("components/audit/observer")
+  audit_invoke_two(js_get(js_get(cfg, "observers"), "a,b"), js_eval("({})"))
+  guard got.val is Some(value) else { fail("missing observer payload") }; json_inspect(value, content=[1, 2])
+}

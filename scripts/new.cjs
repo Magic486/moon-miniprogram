@@ -38,7 +38,7 @@ license = "Apache-2.0"
 keywords = [ "miniprogram", "wechat" ]
 
 import {
-  "${FW}@0.4.0"
+  "${FW}@0.5.0"
 }
 
 preferred_target = "js"
@@ -210,11 +210,13 @@ files.set(
 files.set("miniprogram/sitemap.json", '{ "rules": [{ "action": "allow", "page": "*" }] }\n');
 
 files.set(
-  "miniprogram/project.config.json",
+  "project.config.json",
   JSON.stringify(
     {
       appid: "touristappid",
       compileType: "miniprogram",
+      // 配置文件位于项目根，miniprogramRoot 指向小程序目录：
+      // 微信开发者工具导入「项目根」即可，避免 miniprogram 内再套 miniprogram。
       miniprogramRoot: "miniprogram/",
       projectname: name,
       setting: { es6: false, postcss: false, minified: false },
@@ -268,7 +270,8 @@ node mmp.cjs release   # release 构建 + 拷贝（发布用）
 \`\`\`
 
 业务逻辑全部在 \`engine/engine.mbt\`，页面 JS 只有一行装配代码。
-微信开发者工具（测试号即可）打开 \`miniprogram/\` 即可运行。
+微信开发者工具（测试号即可）导入项目根目录即可运行（project.config.json
+自动指向 \`miniprogram/\`）。
 `,
 );
 
@@ -287,4 +290,4 @@ console.log(`  cd ${name}`);
 console.log("  node mmp.cjs test     # 业务单测（无需微信工具）");
 console.log("  node mmp.cjs build    # 构建并拷贝产物到 miniprogram/engine/");
 console.log("  node mmp.cjs dev      # watch：.mbt 变更自动重编译");
-console.log("  # 微信开发者工具打开 miniprogram/");
+console.log("  # 微信开发者工具导入项目根目录（project.config.json 指向 miniprogram/）");

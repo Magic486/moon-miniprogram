@@ -69,7 +69,11 @@ extern "js" fn wx_screen_brightness(cb : (Double) -> Unit) -> Unit =
   #|(cb) => {
   #|  if (typeof wx === "undefined" || !wx.getScreenBrightness) { cb(-1.0); return; }
   #|  wx.getScreenBrightness({
-  #|    success: (res) => cb(Number(res.value) || -1.0),
+  #|    // 合法的 0 是有效亮度；只有缺失/NaN 才判失败
+  #|    success: (res) => {
+  #|      const v = Number(res.value);
+  #|      cb(Number.isNaN(v) ? -1.0 : v);
+  #|    },
   #|    fail: () => cb(-1.0),
   #|  });
   #|}
@@ -107,12 +111,33 @@ pub fn hide_nav_bar_loading() -> Unit {
 }
 
 ///|
-/// 导航栏颜色。foreground: "black" | "white"
-pub fn set_nav_bar_color(foreground : String, background : String) -> Unit {
+/// 导航栏前景色。微信原生仅接受 #ffffff 与 #000000，
+/// 用枚举避免散落裸字符串。
+pub(all) enum NavFrontColor {
+  /// 白色前景（深色背景）
+  White
+  /// 黑色前景（浅色背景）
+  Black
+} derive(Eq, Debug)
+
+///|
+fn NavFrontColor::to_hex(self : NavFrontColor) -> String {
+  match self {
+    White => "#ffffff"
+    Black => "#000000"
+  }
+}
+
+///|
+/// 导航栏颜色。front_color 用枚举；background 传 6 位十六进制色值。
+pub fn set_nav_bar_color(
+  front_color : NavFrontColor,
+  background : String,
+) -> Unit {
   wx_call(
     "setNavigationBarColor",
     jobj([
-      ("frontColor", jstr(foreground)),
+      ("frontColor", jstr(front_color.to_hex())),
       ("backgroundColor", jstr(background)),
     ]).stringify(),
   )

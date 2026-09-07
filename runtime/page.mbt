@@ -72,7 +72,8 @@ pub fn PageCtx::set_data(self : PageCtx, data : Json) -> Unit {
 /// ```
 ///
 /// 镜像永远是 `this.data`（由微信运行时维护），框架不另存状态；
-/// 与 `set_data`（补丁式透传）可混用。需要删除键时用 `replace_state`。
+/// 与 `set_data`（补丁式透传）可混用。需要删除键时把状态放进子对象容器
+/// 后用 `replace_state` 整体替换该容器（根键无法删除，见 replace_state）。
 pub fn PageCtx::set_state(self : PageCtx, new_state : Json) -> Unit {
   let old : Json? = Some(@json.parse(js_data_string(self.page))) catch {
     _ => None
@@ -87,12 +88,29 @@ pub fn PageCtx::set_state(self : PageCtx, new_state : Json) -> Unit {
 }
 
 ///|
-/// 全量替换状态：与当前 data 全树 diff，未提及的键会被删除
-/// （setData 无法按键删除，删除时以父级整体覆盖实现）。
+/// 全量状态替换：与当前 data 全树 diff，只对变化路径发送 setData。
 /// 部分更新请用 `set_state`。
+///
+/// 数据根模型：页面 data 的**根键**应视为稳定 schema（创建后不增删）；
+/// 需要整体替换的业务状态放进单一容器键（如 `state`），对它调用
+/// `replace_state` 时容器内部的删除会以父级替换生效。微信 setData 无法删除
+/// 根键，因此当新状态**缺少旧状态已有的根键**时会发出 dev 警告，
+/// 该键在微信 data 中会保留——此时请把状态收敛进子对象。
 pub fn PageCtx::replace_state(self : PageCtx, new_state : Json) -> Unit {
   let old : Json? = Some(@json.parse(js_data_string(self.page))) catch {
     _ => None
+  }
+  // 根键删除检测：微信 setData 无法删除根键，提醒收敛到子对象容器
+  match (old, new_state) {
+    (Some(Json::Object(om)), Json::Object(nm)) =>
+      for k, _ in om {
+        if !nm.contains(k) {
+          js_dev_warn(
+            "replace_state: 新状态缺少旧根键 \"\{k}\"——微信无法删除 data 根键，该键将保留。如需删除请把状态放进子对象容器后整体替换",
+          )
+        }
+      }
+    (_, _) => ()
   }
   let patch = match old {
     Some(o) => diff_to_paths(o, new_state)

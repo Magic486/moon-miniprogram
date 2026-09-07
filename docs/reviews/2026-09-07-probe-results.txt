@@ -1,0 +1,72 @@
+Warning: [0007]
+    ╭─[ C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\app.mbt:15:8 ]
+    │
+ 15 │   priv app : JsVal
+    │        ─┬─  
+    │         ╰─── Warning (unused_field): Field 'app' is never read
+────╯
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:6 ("audit: root replacement removes obsolete field") failed
+inspect failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:9:3-9:52
+Diff:
+ {
++  obsolete: 2
+ }
+
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:13 ("audit: component methods follow native contract") failed
+expect test failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:16:3-16:81
+Diff: (- expected, + actual)
+----
+-function
++undefined
+----
+
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:20 ("audit: location fallback is MoonBit Json") failed
+expect test failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:23:3-23:54
+Diff: (- expected, + actual)
+----
+-true
++false
+----
+
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:27 ("audit: remove storage passes string key") failed
+inspect failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:30:91-30:127
+Diff:
+-"token"
++{
++  key: "token"
++}
+
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:34 ("audit: zero brightness remains zero") failed
+expect test failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:37:3-37:34
+Diff: (- expected, + actual)
+----
+-0
++-1
+----
+
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:41 ("audit: route preserves large integer") failed
+expect test failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:42:3-42:95
+Diff: (- expected, + actual)
+----
+-/detail?id=4294967296
++/detail?id=2147483647
+----
+
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:46 ("audit: route encodes parameter name") failed
+expect test failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:47:3-47:81
+Diff: (- expected, + actual)
+----
+-/detail?a%26b=x
++/detail?a&b=x
+----
+
+[Magic486/moon-miniprogram] test runtime/audit_review_wbtest.mbt:55 ("audit: multi field observer receives all arguments") failed
+inspect failed at C:\Users\yelfs\Desktop\moonbit\moon-miniprogram\runtime\audit_review_wbtest.mbt:60:75-60:110
+Diff:
+-[
+-  1
+-  2
+-]
++1
+
+Total tests: 8, passed: 0, failed: 8.

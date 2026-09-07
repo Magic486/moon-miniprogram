@@ -21,7 +21,7 @@
 | showActionSheet | ✅ `show_action_sheet(items, on_result~)` | 回调 `Int?` |
 | vibrateShort/vibrateLong | ✅ `vibrate_short` `vibrate_long` | |
 | 导航栏标题 setNavigationBarTitle | ✅ `set_nav_title` | |
-| 导航栏配色 setNavigationBarColor | ✅ `set_nav_bar_color(fg, bg)` | |
+| 导航栏配色 setNavigationBarColor | ✅ `set_nav_bar_color(NavFrontColor, bg)` | 枚举保证 #ffffff/#000000 |
 | 导航栏 loading ×2 | ✅ `show_nav_bar_loading` `hide_nav_bar_loading` | |
 | 下拉刷新 stopPullDownRefresh | ✅ `stop_pull_down_refresh` | |
 | 页面滚动 pageScrollTo | ✅ `page_scroll_to(top, duration~)` | |

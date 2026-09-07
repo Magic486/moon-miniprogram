@@ -27,14 +27,16 @@ function failIfNotProject() {
   }
 }
 
-function moon(args) {
-  const r = spawnSync("moon", args, { cwd: root, stdio: "inherit" });
+function moon(args, soft = false) {
+  const r = spawnSync("moon", args, { cwd: root, stdio: soft ? "pipe" : "inherit" });
   if (r.status !== 0) {
+    if (soft) return false;
     process.exit(r.status || 1);
   }
+  return true;
 }
 
-function copyArtifact(releaseMode) {
+function copyArtifact(releaseMode, soft = false) {
   const rel = releaseMode
     ? "_build/js/release/build/engine-export/engine-export.js"
     : "_build/js/debug/build/engine-export/engine-export.js";
@@ -44,30 +46,38 @@ function copyArtifact(releaseMode) {
     // debug 模式回退：引擎首次未 release 构建时产物只在 release 下
     const alt = path.join(root, release);
     if (!fs.existsSync(alt) || releaseMode) {
-      console.error("[mmp] error: engine-export.js not found. Run the same mode build first.");
+      const msg = "[mmp] error: engine-export.js not found. Run the same mode build first.";
+      if (soft) {
+        log("build failed (see output above) — watching for fixes…");
+        return false;
+      }
+      console.error(msg);
       process.exit(1);
     }
     fs.copyFileSync(alt, DEST);
     log(`copied (release fallback) ${path.relative(root, alt)} -> ${path.relative(root, DEST)}`);
-    return;
+    return true;
   }
   fs.mkdirSync(path.dirname(DEST), { recursive: true });
   fs.copyFileSync(src, DEST);
   log(`copied ${path.relative(root, src)} -> ${path.relative(root, DEST)} (${(fs.statSync(DEST).size / 1024).toFixed(1)} KB)`);
+  return true;
 }
 
-function cmdBuild(release) {
-  moon(release ? ["build", "--target", "js", "--release"] : ["build", "--target", "js"]);
-  copyArtifact(release);
+function cmdBuild(release, soft = false) {
+  if (!moon(release ? ["build", "--target", "js", "--release"] : ["build", "--target", "js"], soft)) {
+    return false;
+  }
+  return copyArtifact(release, soft);
 }
 
 function cmdDev() {
-  log("watching .mbt changes (Ctrl+C to stop)…");
+  log("watching source changes (.mbt / moon.pkg / moon.mod, Ctrl+C to stop)…");
+  // 编译失败不退出：保留监听，修改后自动恢复（soft 模式吞失败，不 process.exit）
   const run = () => {
-    try {
-      cmdBuild(false);
+    if (cmdBuild(false, true)) {
       log("ready");
-    } catch (_) {}
+    }
   };
   run();
   const ignored = new Set(["_build", ".git", ".mooncakes", "miniprogram", "node_modules"]);
@@ -76,7 +86,7 @@ function cmdDev() {
     if (!name || typeof name !== "string") return;
     const top = name.split(/[\\/]/)[0];
     if (ignored.has(top)) return;
-    if (!/\.mbt$/i.test(name)) return;
+    if (!/\.mbt$/i.test(name) && !/moon\.pkg$/i.test(name) && !/moon\.mod$/i.test(name)) return;
     if (timer) clearTimeout(timer);
     timer = setTimeout(run, 250);
   });
