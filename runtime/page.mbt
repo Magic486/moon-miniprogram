@@ -231,40 +231,40 @@ pub fn register_page(def : PageDef) -> Unit {
 /// 供 JS 侧调用：按路径构建 Page() 配置对象。
 ///
 /// 生命周期兜底：无论页面是否自定义 onUnload，构建出的配置都保证卸载时
-/// 自动执行 `unbind_all`（清除该页面在所有 store 上的订阅）——
-/// 用户自定义 onUnload 会被包装（先执行用户逻辑，再清理），
-/// 未定义则框架追加一个仅清理的 onUnload。
+/// 自动执行 `unbind_all`（清除该页面在所有 store 上的订阅）。
+/// 用户 onUnload 的用户逻辑与清理分别放在 fns / clean_fns 两个槽，
+/// JS 包装层用 try/finally 执行——即使用户逻辑抛异常，退订也必然发生。
 pub fn page_config(path : String) -> JsVal raise MpError {
   guard page_registry.get(path) is Some(def) else {
     raise MpError::PageNotFound(path)
   }
-  let extra = if def.handlers.any(fn(kv) { kv.0 == "onUnload" }) {
-    0
-  } else {
-    1
-  }
-  let total = def.handlers.length() + extra
+  let has_unload = def.handlers.any(fn(kv) { kv.0 == "onUnload" })
+  let total = def.handlers.length() + (if has_unload { 0 } else { 1 })
   let names : FixedArray[String] = FixedArray::make(total, "")
   let fns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(total, (_, _) => {
     ()
   })
+  let cfns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(total, (_, _) => {
+    ()
+  })
+  let noop = fn(_page : JsVal, _arg : JsVal) -> Unit { () }
   for i, kv in def.handlers {
     let (name, h) = kv
     names[i] = name
     if name == "onUnload" {
-      // 用户自定义卸载逻辑 → 包装：先用户后自动清理订阅
-      fns[i] = fn(page, arg) {
-        h(PageCtx::new(page), Payload::new(arg))
-        unbind_all(PageCtx::new(page))
-      }
+      // 用户逻辑槽 + 独立清理槽（JS finally 保证执行）
+      fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+      cfns[i] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
     } else {
       fns[i] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+      cfns[i] = noop
     }
   }
-  if extra == 1 {
+  if !has_unload {
     let last = def.handlers.length()
     names[last] = "onUnload"
-    fns[last] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
+    fns[last] = noop
+    cfns[last] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
   }
   let rnames : FixedArray[String] = FixedArray::make(def.returns.length(), "")
   let rfns : FixedArray[(JsVal, JsVal) -> String] = FixedArray::make(
@@ -278,27 +278,39 @@ pub fn page_config(path : String) -> JsVal raise MpError {
       h(PageCtx::new(page), Payload::new(arg)).stringify()
     }
   }
-  build_page_cfg(def.data.stringify(), names, fns, rnames, rfns)
+  build_page_cfg(def.data.stringify(), names, fns, cfns, rnames, rfns)
 }
 
 ///|
 /// 构建 Page() 配置：data 解析 JSON；处理器包一层普通函数以绑定 this；
-/// 带返回值钩子额外解析返回的 JSON。注：跨 FFI 传处理列表用平行数组，
-/// 不依赖元组/结构体的内部表示。
+/// clean_fns 在 finally 中执行（onUnload 时即便用户逻辑抛异常也保证退订）；
+/// 处理器与 returns 钩子抛错会被记录而不是中断微信运行时。
 extern "js" fn build_page_cfg(
   data_json : String,
   names : FixedArray[String],
   handlers : FixedArray[(JsVal, JsVal) -> Unit],
+  clean_fns : FixedArray[(JsVal, JsVal) -> Unit],
   return_names : FixedArray[String],
   return_fns : FixedArray[(JsVal, JsVal) -> String],
 ) -> JsVal =
-  #|(dataJson, names, handlers, rnames, rfns) => {
+  #|(dataJson, names, handlers, cfns, rnames, rfns) => {
   #|  const cfg = { data: JSON.parse(dataJson) };
+  #|  const warn = (n, e) =>
+  #|    console.error("[moon-miniprogram] handler '" + n + "' threw:", e);
   #|  for (let i = 0; i < names.length; i++) {
-  #|    cfg[names[i]] = function(arg) { handlers[i](this, arg); };
+  #|    const n = names[i];
+  #|    cfg[n] = function(arg) {
+  #|      try { handlers[i](this, arg); }
+  #|      catch (e) { warn(n, e); }
+  #|      finally { cfns[i](this, arg); }
+  #|    };
   #|  }
   #|  for (let i = 0; i < rnames.length; i++) {
-  #|    cfg[rnames[i]] = function(arg) { return JSON.parse(rfns[i](this, arg)); };
+  #|    const n = rnames[i];
+  #|    cfg[n] = function(arg) {
+  #|      try { return JSON.parse(rfns[i](this, arg)); }
+  #|      catch (e) { warn(n, e); return null; }
+  #|    };
   #|  }
   #|  return cfg;
   #|}

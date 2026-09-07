@@ -189,3 +189,29 @@ test "audit: get_location 成功/失败都经正确 FFI 传递" {
   })
   inspect(failed.val, content="true")
 }
+
+///|
+/// 抛 JS 异常（模拟用户 handler 内的意外抛错）
+extern "js" fn audit_throw() -> Unit =
+  #|() => { throw new Error("boom"); }
+
+///|
+/// finally 保证：用户 detached 抛异常后订阅仍被清理（错误被记录不中断）
+test "audit: 用户销毁回调抛异常也保证退订（finally）" {
+  let s = create_store("fin", jobj([("n", jnum(0.0))]))
+  register_component({
+    key: "components/audit-fin/audit-fin",
+    properties: jobj([]),
+    data: jobj([]),
+    handlers: [("detached", (_ctx, _payload) => audit_throw())],
+    observers: [],
+    page_lifetimes: [],
+  })
+  let cfg = component_config("components/audit-fin/audit-fin")
+  let c = js_fake_page("fin")
+  PageCtx::new(c).bind_store(s)
+  inspect(s.subscriber_count(), content="1")
+  // 调用 detached：内部抛异常 → JS 层 catch 记录 → finally 清理 → 不向测试传播
+  js_invoke_with(c, js_get(cfg, "detached"), js_eval("{}"))
+  inspect(s.subscriber_count(), content="0")
+}

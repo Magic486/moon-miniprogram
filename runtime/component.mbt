@@ -116,17 +116,23 @@ pub fn component_config(key : String) -> JsVal raise MpError {
   )
   let mut li : Int = 0
   let mut mi : Int = 0
+  // 清理槽（lcfns）：仅 detached 执行 unbind_all，其余 noop；
+  // JS 层 finally 调用，保证用户逻辑抛异常也必然退订
+  let lcfns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(
+    life_total,
+    (_, _) => (),
+  )
+  let noop = fn(_page : JsVal, _arg : JsVal) -> Unit { () }
   for kv in def.handlers {
     let (name, h) = kv
     if is_component_lifecycle(name) {
       lnames[li] = name
       if name == "detached" {
-        lfns[li] = fn(page, arg) {
-          h(PageCtx::new(page), Payload::new(arg))
-          unbind_all(PageCtx::new(page))
-        }
+        lfns[li] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+        lcfns[li] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
       } else {
         lfns[li] = fn(page, arg) { h(PageCtx::new(page), Payload::new(arg)) }
+        lcfns[li] = noop
       }
       li = li + 1
     } else {
@@ -137,7 +143,8 @@ pub fn component_config(key : String) -> JsVal raise MpError {
   }
   if !has_detached {
     lnames[li] = "detached"
-    lfns[li] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
+    lfns[li] = noop
+    lcfns[li] = fn(page, _arg) { unbind_all(PageCtx::new(page)) }
   }
   let onames : FixedArray[String] = FixedArray::make(def.observers.length(), "")
   let ofns : FixedArray[(JsVal, JsVal) -> Unit] = FixedArray::make(
@@ -167,6 +174,7 @@ pub fn component_config(key : String) -> JsVal raise MpError {
     def.data.stringify(),
     lnames,
     lfns,
+    lcfns,
     mnames,
     mfns,
     onames,
@@ -178,13 +186,15 @@ pub fn component_config(key : String) -> JsVal raise MpError {
 
 ///|
 /// 构建 Component() 配置：properties 规范转微信格式（"t" 字符串 →
-/// 构造函数）；生命周期顶层绑定 this；自定义方法进 cfg.methods；
-/// observers 收全部实参数组；pageLifetimes 组装嵌套对象。平行数组传列表。
+/// 构造函数）；生命周期顶层绑定 this（清理槽经 finally 调用）；
+/// 自定义方法进 cfg.methods；observers 收全部实参数组；
+/// pageLifetimes 组装嵌套对象。平行数组传列表。
 extern "js" fn js_build_component_cfg(
   props_json : String,
   data_json : String,
   life_names : FixedArray[String],
   life_fns : FixedArray[(JsVal, JsVal) -> Unit],
+  life_clean_fns : FixedArray[(JsVal, JsVal) -> Unit],
   method_names : FixedArray[String],
   method_fns : FixedArray[(JsVal, JsVal) -> Unit],
   observer_names : FixedArray[String],
@@ -192,7 +202,7 @@ extern "js" fn js_build_component_cfg(
   plifetime_names : FixedArray[String],
   plifetime_fns : FixedArray[(JsVal, JsVal) -> Unit],
 ) -> JsVal =
-  #|(propsJson, dataJson, lnames, lfns, mnames, mfns, onames, ofns, pnames, pfns) => {
+  #|(propsJson, dataJson, lnames, lfns, lcfns, mnames, mfns, onames, ofns, pnames, pfns) => {
   #|  const TYPES = {
   #|    String: String,
   #|    Number: Number,
@@ -217,9 +227,17 @@ extern "js" fn js_build_component_cfg(
   #|    props[k] = def;
   #|  }
   #|  const cfg = { properties: props, data: JSON.parse(dataJson) };
-  #|  // 生命周期（created/attached/ready/moved/detached/error）放顶层
+  #|  const warn = (n, e) =>
+  #|    console.error("[moon-miniprogram] lifecycle '" + n + "' threw:", e);
+  #|  // 生命周期（created/attached/ready/moved/detached/error）放顶层；
+  #|  // 清理槽 lcfns 在 finally 中执行：用户逻辑抛异常也保证 detached 退订
   #|  for (let i = 0; i < lnames.length; i++) {
-  #|    cfg[lnames[i]] = function(arg) { lfns[i](this, arg); };
+  #|    const n = lnames[i];
+  #|    cfg[n] = function(arg) {
+  #|      try { lfns[i](this, arg); }
+  #|      catch (e) { warn(n, e); }
+  #|      finally { lcfns[i](this, arg); }
+  #|    };
   #|  }
   #|  // 自定义方法必须进 cfg.methods（微信原生契约：模板事件绑定查找 methods）
   #|  if (mnames.length > 0) {
