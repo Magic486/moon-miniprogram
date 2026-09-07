@@ -5,3 +5,6 @@ node_modules/
 .DS_Store
 
 .mooncakes/
+
+# 本地交接文档（不上传 GitHub）
+CONTEXT.md
