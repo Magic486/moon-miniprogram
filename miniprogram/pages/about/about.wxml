@@ -1,0 +1,10 @@
+<view class="page">
+  <view class="card">
+    <text class="eyebrow">SHARED STATE</text>
+    <text class="title">{{title}}</text>
+    <text class="copy">首页加入购物车后，这里会读取同一个 MoonBit store。</text>
+    <text class="count">{{cartCount}}</text>
+    <text class="note">{{note}}</text>
+    <button class="primary" bind:tap="onGoHome">返回首页</button>
+  </view>
+</view>

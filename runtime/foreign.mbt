@@ -24,11 +24,6 @@ extern "js" fn js_stringify(v : JsVal) -> String =
   #|(v) => JSON.stringify(v)
 
 ///|
-/// JSON.parse
-extern "js" fn js_parse(s : String) -> JsVal =
-  #|(s) => JSON.parse(s)
-
-///|
 /// 判断值是否可用（非 undefined / null）
 extern "js" fn js_has_value(v : JsVal) -> Bool =
   #|(v) => v !== undefined && v !== null

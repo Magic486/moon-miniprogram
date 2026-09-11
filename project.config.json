@@ -1,0 +1,11 @@
+{
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "miniprogram/",
+  "projectname": "moon-miniprogram-showcase",
+  "setting": {
+    "es6": false,
+    "postcss": false,
+    "minified": false
+  }
+}

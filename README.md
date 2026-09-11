@@ -4,12 +4,12 @@ A MoonBit framework for building WeChat Mini Programs — type-safe runtime with
 automatic state diffing, declarative pages/components/routing, and headless
 testing infrastructure.
 
-[![version](https://img.shields.io/badge/version-0.5.0-blue)](#)
-[![tests](https://img.shields.io/badge/tests-53%20unit%20%E2%9C%93%20%7C%2038%20smoke%20%E2%9C%93-green)](#)
+[![version](https://img.shields.io/badge/version-0.5.3-blue)](#)
+[![tests](https://img.shields.io/badge/tests-54%20unit%20%E2%9C%93%20%7C%2040%20smoke%20%E2%9C%93-green)](#)
 [![license](https://img.shields.io/badge/license-Apache--2.0-lightgrey)](#)
 [![CI](https://github.com/Magic486/moon-miniprogram/actions/workflows/ci.yml/badge.svg)](https://github.com/Magic486/moon-miniprogram/actions)
 
-Documentation: [Guide](docs/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md) · [wx API coverage](docs/API%E8%A6%86%E7%9B%96%E5%AF%B9%E7%85%A7%E8%A1%A8.md) · [RFC 0001 - Platform adapters](docs/rfc/0001-%E5%B9%B3%E5%8F%B0%E9%80%82%E9%85%8D%E8%AE%BE%E8%AE%A1.md)
+Documentation: [Guide](docs/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md) · [Acceptance](docs/%E9%AA%8C%E6%94%B6%E6%8C%87%E5%8D%97.md) · [References and compliance](docs/%E5%8F%82%E8%80%83%E4%B8%8E%E5%90%88%E8%A7%84%E8%AF%B4%E6%98%8E.md) · [wx API coverage](docs/API%E8%A6%86%E7%9B%96%E5%AF%B9%E7%85%A7%E8%A1%A8.md) · [RFC 0001 - Platform adapters](docs/rfc/0001-%E5%B9%B3%E5%8F%B0%E9%80%82%E9%85%8D%E8%AE%BE%E8%AE%A1.md)
 
 ---
 
@@ -43,6 +43,10 @@ cd myapp
 
 The scaffold pulls `Magic486/moon-miniprogram` from
 [mooncakes.io](https://mooncakes.io) and wires up the CommonJS export.
+
+To inspect this repository directly, run `node scripts/mmp.cjs release`, then
+import the repository root in WeChat DevTools. The included two-page showcase
+uses `touristappid`, so an evaluator can open it without editing project files.
 
 ## Usage
 
@@ -87,18 +91,22 @@ node mmp.cjs dev       # watch-mode rebuild (open miniprogram/ in WeChat DevTool
 ## Performance
 
 Diff output is pinned by snapshot tests (`runtime/bench_test.mbt`); values are
-JSON bytes per update.
+serialized JSON character counts per update.
 
 | Scenario | `set_state` patch | Full `setData` |
 |---|---|---|
-| Append 1 item to a 1000-item list | 49 B | 34,959 B |
-| Change one leaf in a nested object | 24 B | 75 B |
-| No change | 0 B (no `setData` call) | 75 B |
+| Append 1 item to a 1000-item list | 49 chars | 34,959 chars |
+| Change one leaf in a nested object | 24 chars | 75 chars |
+| No change | 0 chars (no `setData` call) | 75 chars |
 
 ## Documentation
 
 - [Guide](docs/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md) — from zero to a
   runnable Mini Program; state, components, routing, headless testing, release.
+- [Acceptance guide](docs/%E9%AA%8C%E6%94%B6%E6%8C%87%E5%8D%97.md) — reproducible
+  automated checks and a short WeChat DevTools review path.
+- [References and compliance](docs/%E5%8F%82%E8%80%83%E4%B8%8E%E5%90%88%E8%A7%84%E8%AF%B4%E6%98%8E.md) — originality,
+  upstream references, licenses, and reuse boundaries.
 - [wx API coverage table](docs/API%E8%A6%86%E7%9B%96%E5%AF%B9%E7%85%A7%E8%A1%A8.md) —
   WeChat API coverage, domain by domain.
 - [RFC 0001](docs/rfc/0001-%E5%B9%B3%E5%8F%B0%E9%80%82%E9%85%8D%E8%AE%BE%E8%AE%A1.md) —
@@ -113,6 +121,7 @@ JSON bytes per update.
 runtime/          framework core (models, diff engine, store, router, wx bindings, platform probe)
 engine/           minimal example, used as the smoke-test host
 engine-export/    CommonJS export wrapper (foreign_library)
+miniprogram/      importable two-page WeChat DevTools showcase
 scripts/          scaffolding, mmp CLI, wx simulator, smoke tests, minifier
 docs/             guide, API coverage table, RFCs
 ```
@@ -121,8 +130,8 @@ docs/             guide, API coverage table, RFCs
 
 ```bash
 git clone https://github.com/Magic486/moon-miniprogram
-moon test                # 43 unit tests
-powershell scripts/build-example.ps1   # 38 smoke assertions
+moon test                # 54 unit tests
+powershell scripts/build-example.ps1   # build showcase + 40 smoke assertions
 ```
 
 Bug reports and feature discussions go to

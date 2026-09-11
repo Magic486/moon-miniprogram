@@ -1,0 +1,8 @@
+.page { padding: 72rpx 32rpx; }
+.card { padding: 44rpx 36rpx; border: 1rpx solid #e2e8f0; border-radius: 28rpx; background: #fff; box-shadow: 0 12rpx 36rpx rgba(15, 23, 42, .06); }
+.eyebrow { display: block; color: #0f766e; font-size: 22rpx; font-weight: 700; letter-spacing: 4rpx; }
+.title { display: block; margin-top: 12rpx; font-size: 48rpx; font-weight: 800; }
+.copy { display: block; margin-top: 24rpx; color: #64748b; font-size: 27rpx; line-height: 1.7; }
+.count { display: block; margin-top: 40rpx; color: #0f766e; font-size: 128rpx; font-weight: 800; text-align: center; }
+.note { display: block; margin: 8rpx 0 40rpx; color: #94a3b8; font-size: 24rpx; text-align: center; }
+.primary { background: #0f766e; color: #fff; }

@@ -25,7 +25,7 @@ fn ensure_registered() -> Unit {
         // 全局错误边界：未捕获 JS 异常汇聚于此（可做上报/提示）
         ("onError", (_ctx, _payload) => ()),
       ],
-      global_data: @mp.jobj([("version", @mp.jstr("0.3.4"))]),
+      global_data: @mp.jobj([("version", @mp.jstr("0.5.3"))]),
     })
     @mp.register_page(counter_page())
     @mp.register_page(about_page())
@@ -108,13 +108,12 @@ fn counter_page() -> @mp.PageDef {
     handlers: [
       // 订阅共享状态：快照注入 cartCount，之后 store.set 自动同步
       ("onLoad", (ctx, _payload) => ctx.bind_store(cart)),
-      // 声明式路由导航：合法参数（from）保留，多余参数（t）自动剥离 + dev 警告
+      // 声明式路由导航：参数受注册路由的白名单约束
       (
         "onGoAbout",
         (_ctx, _payload) => {
           @mp.navigate_to_route("pages/about/about", params={
             "from": "counter",
-            "t": @mp.jnum(1.0),
           })
         },
       ),

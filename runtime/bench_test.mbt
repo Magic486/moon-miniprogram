@@ -1,7 +1,7 @@
 ///|
 /// 基准辅助：计算一次 set_state 的传输量对比。
-/// 返回 (补丁字节数, 全量 setData 字节数, 补丁条目数)。
-/// 无变化时补丁字节数为 0（框架完全不调用 setData）。
+/// 返回 (补丁 JSON 字符数, 全量 JSON 字符数, 补丁条目数)。
+/// 无变化时补丁字符数为 0（框架完全不调用 setData）。
 fn patch_stats(old : Json, new_ : Json) -> (Int, Int, Int) {
   let patch = diff_partial(old, new_)
   if patch.length() == 0 {

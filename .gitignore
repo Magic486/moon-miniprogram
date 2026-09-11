@@ -1,6 +1,8 @@
 _build/
 target/
 node_modules/
+miniprogram/engine/moon-engine.js
+miniprogram/engine/moon-engine.min.js
 *.log
 .DS_Store
 

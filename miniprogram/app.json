@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/about/about"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0f766e",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "MoonBit Mini Program",
+    "backgroundColor": "#f1f5f9"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

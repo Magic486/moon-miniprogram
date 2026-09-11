@@ -21,6 +21,12 @@ fn AppCtx::new(app : JsVal) -> AppCtx {
 }
 
 ///|
+/// 取得原始微信 App 实例。仅在框架尚未提供对应能力时用于底层互操作。
+pub fn AppCtx::raw(self : AppCtx) -> JsVal {
+  self.app
+}
+
+///|
 /// 应用处理器统一签名
 pub type AppHandler = (AppCtx, Payload) -> Unit
 

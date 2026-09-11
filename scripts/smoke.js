@@ -30,7 +30,7 @@ const engine = require(enginePath);
 // ---- App 装配 ----
 engine.launch();
 check("App() received config", Boolean(sim.appCfg && typeof sim.appCfg.onLaunch === "function"), true);
-check("globalData.version", sim.appCfg.globalData.version, "0.3.4");
+check("globalData.version", sim.appCfg.globalData.version, "0.5.3");
 check("App onError global hook bound", typeof sim.appCfg.onError === "function", true);
 
 // ---- counter 页面 ----
@@ -83,6 +83,7 @@ check("store bind syncs snapshot to A", instA.data.cartCount, 0);
 engine.page("pages/about/about");
 const ab = sim.pageCfg;
 const instB = sim.makeInstance(ab.data);
+check("about handlers bound", typeof ab.onLoad === "function" && typeof ab.onGoHome === "function", true);
 ab.onLoad.call(instB); // about 订阅同一 cart
 check("store bind syncs snapshot to B", instB.data.cartCount, 0);
 
@@ -99,7 +100,7 @@ check("unbound B not updated", instB.data.cartCount, 1);
 check("A keeps updating after B unbound", instA.data.cartCount, 2);
 
 // ---- 声明式路由：白名单参数 → 安全 URL 导航 ----
-idx.onGoAbout.call(instA); // from 保留、t 剥离
+idx.onGoAbout.call(instA); // from 通过路由白名单编码
 check(
   "route navigate keeps allowed param",
   sim.navigations[sim.navigations.length - 1],

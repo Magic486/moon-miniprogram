@@ -42,13 +42,15 @@ pub fn get_global_data() -> Json?
 
 pub fn get_image_info(String, on_result~ : (Int, Int) -> Unit) -> Unit
 
-pub fn get_location(on_result~ : (Json) -> Unit) -> Unit
+pub fn get_location(on_result~ : (Double, Double) -> Unit, on_fail? : () -> Unit) -> Unit
 
 pub fn get_network_type(on_result~ : (String) -> Unit) -> Unit
 
 pub fn get_screen_brightness(on_result~ : (Double) -> Unit) -> Unit
 
 pub fn get_storage(String) -> Json
+
+pub fn get_storage_string(String) -> String
 
 pub fn hide_loading() -> Unit
 
@@ -126,7 +128,7 @@ pub fn set_clipboard(String) -> Unit
 
 pub fn set_global_data(Json) -> Unit
 
-pub fn set_nav_bar_color(String, String) -> Unit
+pub fn set_nav_bar_color(NavFrontColor, String) -> Unit
 
 pub fn set_nav_title(String) -> Unit
 
@@ -154,6 +156,8 @@ pub fn timeline_card(String, query? : String, image_url? : String) -> Json
 
 pub fn toast(String, icon? : ToastIcon, mask? : Bool, duration? : Int) -> Unit
 
+pub fn unbind_all(PageCtx) -> Unit
+
 pub fn vibrate_long() -> Unit
 
 pub fn vibrate_short() -> Unit
@@ -169,6 +173,7 @@ pub(all) suberror MpError {
 pub struct AppCtx {
   // private fields
 }
+pub fn AppCtx::raw(Self) -> JsVal
 
 pub(all) struct AppDef {
   handlers : Array[(String, (AppCtx, Payload) -> Unit)]
@@ -207,6 +212,11 @@ pub(all) enum MiniPlatform {
   Other
 } derive(Eq, @debug.Debug)
 
+pub(all) enum NavFrontColor {
+  White
+  Black
+} derive(Eq, @debug.Debug)
+
 pub struct PageCtx {
   // private fields
 }
@@ -214,6 +224,7 @@ pub fn PageCtx::bind_store(Self, Store) -> Unit
 pub fn PageCtx::get_data(Self) -> Json?
 pub fn PageCtx::replace_state(Self, Json) -> Unit
 pub fn PageCtx::set_data(Self, Json) -> Unit
+pub fn PageCtx::set_field(Self, String, String) -> Unit
 pub fn PageCtx::set_state(Self, Json) -> Unit
 pub fn PageCtx::trigger_event(Self, String, Json) -> Unit
 pub fn PageCtx::unbind_store(Self, Store) -> Unit
@@ -231,6 +242,12 @@ pub struct Payload {
 pub fn Payload::json(Self) -> Json?
 pub fn Payload::new(JsVal) -> Self
 pub fn Payload::number_at(Self, Array[String]) -> Double?
+pub fn Payload::observer_args(Self) -> Array[Json]
+pub fn Payload::observer_old_value(Self) -> Json?
+pub fn Payload::observer_value(Self) -> Json?
+pub fn Payload::query_bool(Self, String) -> Bool?
+pub fn Payload::query_number(Self, String) -> Double?
+pub fn Payload::query_string(Self, String) -> String?
 pub fn Payload::raw(Self) -> JsVal
 pub fn Payload::string_at(Self, Array[String]) -> String?
 

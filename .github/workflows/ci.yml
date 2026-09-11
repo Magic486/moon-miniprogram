@@ -26,11 +26,11 @@ jobs:
       - name: moon test
         run: moon test
 
-      - name: Build engine (release, CJS)
-        run: moon build --target js --release
+      - name: Build importable Mini Program showcase
+        run: node scripts/mmp.cjs release
 
-      - name: Headless smoke test (simulated WeChat runtime)
-        run: node scripts/smoke.js _build/js/release/build/engine-export/engine-export.js
+      - name: Headless smoke test of shipped artifact
+        run: node scripts/smoke.js miniprogram/engine/moon-engine.js
 
   scaffold-e2e:
     runs-on: ubuntu-latest

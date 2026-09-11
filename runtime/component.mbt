@@ -274,7 +274,7 @@ extern "js" fn js_component(cfg : JsVal) -> Unit =
 
 ///|
 /// 供 JS 侧调用：组件文件只需一行
-/// `Component(require("../../engine/moon-engine.js").component("components/tag/tag"))`
+/// `require("../../engine/moon-engine.js").component("components/tag/tag")`
 pub fn component(key : String) -> Unit raise MpError {
   js_component(component_config(key))
 }

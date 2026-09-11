@@ -9,6 +9,11 @@ extern "js" fn js_eval(src : String) -> JsVal =
   #|(src) => new Function("return (" + src + ")")()
 
 ///|
+/// 测试辅助：把 JSON 文本转成 JS 值。
+extern "js" fn js_parse(src : String) -> JsVal =
+  #|(src) => JSON.parse(src)
+
+///|
 /// 对象成员的 typeof（缺键或对象为 undefined 时返回 "undefined"）
 extern "js" fn js_member_typeof(v : JsVal, key : String) -> String =
   #|(v, key) => (v && v[key] !== undefined ? typeof v[key] : "undefined")
@@ -88,6 +93,13 @@ test "app config after register" {
     _ => fail("globalData should be an object")
   }
   inspect(js_typeof(js_get(cfg, "onLaunch")), content="function")
+}
+
+///|
+test "app context exposes raw instance for interop" {
+  let raw = js_eval("({name:'demo-app'})")
+  let ctx = AppCtx::new(raw)
+  inspect(js_typeof(ctx.raw()), content="object")
 }
 
 ///|

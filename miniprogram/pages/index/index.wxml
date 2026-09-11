@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="hero">
+    <text class="eyebrow">MOONBIT × WECHAT</text>
+    <text class="title">Framework Showcase</text>
+    <text class="subtitle">事件进入 MoonBit，状态以最小补丁返回视图。</text>
+  </view>
+
+  <view class="card counter-card">
+    <text class="label">本地页面状态</text>
+    <text class="count">{{count}}</text>
+    <text class="hint">{{tip}}</text>
+    <button class="primary" bind:tap="onTap">计数 +1</button>
+  </view>
+
+  <view class="card">
+    <text class="label">跨页 Store</text>
+    <view class="row"><text>购物车数量</text><text class="value">{{cartCount}}</text></view>
+    <button bind:tap="onBuy">加入购物车</button>
+  </view>
+
+  <view class="card">
+    <text class="label">原生组件互操作</text>
+    <demo-tag text="MoonBit 组件" bind:pick="onPick" />
+    <text class="result">组件事件：{{picked || '尚未触发'}}</text>
+  </view>
+
+  <view class="actions">
+    <button bind:tap="onCopy">复制当前计数</button>
+    <button bind:tap="onGoAbout">查看跨页同步</button>
+  </view>
+</view>

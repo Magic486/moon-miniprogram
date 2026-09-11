@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // moon-miniprogram 脚手架：生成一个新的 MoonBit 微信小程序项目骨架。
-// 用法：node scripts/new.mjs <app-name> [--dir <parent-dir>]
+// 用法：node scripts/new.cjs <app-name> [--dir <parent-dir>]
 "use strict";
 
 const fs = require("fs");
@@ -9,7 +9,7 @@ const path = require("path");
 const args = process.argv.slice(2);
 const name = args[0];
 if (!name || !/^[a-zA-Z][\w-]*$/.test(name)) {
-  console.error("usage: node scripts/new.mjs <app-name> [--dir <parent-dir>]");
+  console.error("usage: node scripts/new.cjs <app-name> [--dir <parent-dir>]");
   process.exit(2);
 }
 const dirIdx = args.indexOf("--dir");
@@ -38,7 +38,7 @@ license = "Apache-2.0"
 keywords = [ "miniprogram", "wechat" ]
 
 import {
-  "${FW}@0.5.0"
+  "${FW}@0.5.3"
 }
 
 preferred_target = "js"

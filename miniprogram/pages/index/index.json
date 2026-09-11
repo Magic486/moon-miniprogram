@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "Framework Showcase",
+  "usingComponents": {
+    "demo-tag": "/components/tag/tag"
+  }
+}
